@@ -3,7 +3,11 @@
 *.keystore
 *.apk
 *.aab
+!dist/*.apk
+!dist/*.zip
 *.zip
+!dist/*.apk
+!dist/*.zip
 node_modules/
 .DS_Store
 release/
