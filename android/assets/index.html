@@ -1,0 +1,2395 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MiMo 用量面板</title>
+<style>
+  :root{
+    --bg:#0b0d10;
+    --bg2:#12151a;
+    --card:#161a20;
+    --card2:#1c2129;
+    --line:#252b34;
+    --line2:#2f3742;
+    --txt:#e7e9ee;
+    --muted:#8b93a1;
+    --dim:#5f6875;
+    --o:#ff6900;
+    --o2:#ffa41b;
+    --o3:#ffcd6b;
+    --green:#33c98b;
+    --red:#ff5a62;
+    --blue:#4aa8ff;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  :root{--sat:env(safe-area-inset-top, 0px);--sab:env(safe-area-inset-bottom, 0px)}
+  html,body{margin:0;padding:0}
+  body{
+    background:radial-gradient(120% 60% at 50% -10%, #1b1a18 0%, var(--bg) 55%) no-repeat, var(--bg);
+    color:var(--txt);
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro SC","PingFang SC","Noto Sans SC","Microsoft YaHei",sans-serif;
+    font-size:14px;line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+    padding:var(--sat) 0 24px;
+    min-height:100vh;
+  }
+  .wrap{max-width:920px;margin:0 auto;padding:14px 14px 0}
+  .num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+
+  /* ===== 头部 ===== */
+  header{display:flex;align-items:center;gap:10px;padding:6px 2px 16px}
+  .logo{
+    width:34px;height:34px;border-radius:10px;flex:none;
+    background:linear-gradient(140deg,var(--o),var(--o2));
+    display:flex;align-items:center;justify-content:center;
+    font-weight:800;font-size:15px;color:#1a1005;letter-spacing:.5px;
+    box-shadow:0 4px 14px rgba(255,105,0,.25)
+  }
+  .titles{flex:1;min-width:0}
+  .titles h1{margin:0;font-size:16px;font-weight:650;letter-spacing:.2px}
+  .titles p{margin:1px 0 0;font-size:11.5px;color:var(--muted)}
+  .hbtn{
+    width:34px;height:34px;border-radius:10px;border:1px solid var(--line);
+    background:var(--card);color:var(--txt);
+    display:flex;align-items:center;justify-content:center;cursor:pointer;
+    transition:.15s;flex:none
+  }
+  .hbtn:active{transform:scale(.94);background:var(--card2)}
+  .hbtn.spin svg{animation:sp .8s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .hbtn svg{width:17px;height:17px;stroke:currentColor;stroke-width:1.8;fill:none;stroke-linecap:round}
+
+  /* ===== 通用卡片 ===== */
+  .card{
+    background:linear-gradient(180deg,var(--card) 0%,#14171d 100%);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:14px;
+    margin-bottom:12px;
+  }
+  .card-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+  .card-t{font-size:12px;color:var(--muted);letter-spacing:.4px}
+  .card-v{font-size:12.5px;color:var(--dim)}
+
+  /* ===== 余额主卡 ===== */
+  .bal{
+    position:relative;overflow:hidden;
+    background:
+      radial-gradient(120% 130% at 100% 0%, rgba(255,105,0,.16) 0%, rgba(255,105,0,0) 55%),
+      linear-gradient(180deg,#191c22,#12151a);
+    border-color:#2a2f38;
+  }
+  .bal::after{
+    content:"";position:absolute;right:-40px;bottom:-60px;width:170px;height:170px;
+    border-radius:50%;background:radial-gradient(circle,rgba(255,164,27,.14),transparent 70%);
+    pointer-events:none
+  }
+  .bal-top{display:flex;align-items:flex-start;justify-content:space-between}
+  .bal-label{font-size:11.5px;color:var(--muted);letter-spacing:.6px;display:flex;align-items:center;gap:6px}
+  .pill{
+    font-size:10px;padding:2px 7px;border-radius:20px;letter-spacing:.3px;
+    border:1px solid;line-height:1.5
+  }
+  .pill.ok{color:var(--green);border-color:rgba(51,201,139,.35);background:rgba(51,201,139,.1)}
+  .pill.bad{color:var(--red);border-color:rgba(255,90,98,.35);background:rgba(255,90,98,.1)}
+  .pill.warn{color:var(--o2);border-color:rgba(255,164,27,.35);background:rgba(255,164,27,.1)}
+  .bal-amt{
+    display:flex;align-items:baseline;gap:3px;margin:8px 0 2px;
+    font-size:38px;font-weight:700;letter-spacing:-1px;line-height:1.1;
+    background:linear-gradient(100deg,#ffd08a,#ff6900 70%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .bal-amt .cur{font-size:16px;font-weight:600;letter-spacing:0;margin-right:2px}
+  .bal-sub{font-size:11.5px;color:var(--dim)}
+  .bal-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px;position:relative;z-index:1}
+  .mini{background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:11px;padding:8px 9px}
+  .mini-k{font-size:10.5px;color:var(--muted);white-space:nowrap}
+  .mini-v{font-size:15px;font-weight:600;margin-top:2px;letter-spacing:-.2px}
+  .mini-v.small{font-size:13px}
+
+  /* ===== 概览四宫格 ===== */
+  .ov{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:12px}
+  .ov-i{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:11px 12px}
+  .ov-k{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:4px}
+  .ov-v{font-size:21px;font-weight:650;letter-spacing:-.5px;margin-top:3px}
+  .ov-s{font-size:10.5px;color:var(--dim);margin-top:1px}
+
+  /* ===== 分段控件 ===== */
+  .accbar{display:flex;gap:8px;overflow-x:auto;padding:2px 0 10px;scrollbar-width:none}
+  .accbar::-webkit-scrollbar{display:none}
+  .accchip{flex:none;display:flex;align-items:center;gap:6px;padding:7px 12px;border-radius:12px;
+    border:1px solid var(--line);background:var(--bg2);color:var(--muted);font-size:12px;white-space:nowrap}
+  .accchip.on{border-color:rgba(255,138,30,.55);background:rgba(255,105,0,.14);color:#ffb066;font-weight:600}
+  .accchip i{width:6px;height:6px;border-radius:50%;background:#ff6900}
+  .accchip.add{color:var(--muted);border-style:dashed}
+  .seg{display:flex;gap:4px;background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:3px}
+  .seg button{
+    border:0;background:transparent;color:var(--muted);font-size:12px;
+    padding:5px 10px;border-radius:7px;cursor:pointer;font-family:inherit;transition:.15s;
+  }
+  .seg button.on{background:linear-gradient(140deg,var(--o),#ff8a1e);color:#1a1005;font-weight:600}
+
+  /* ===== Tabs ===== */
+  .tabs{display:flex;gap:2px;margin:4px 0 12px;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{
+    flex:none;border:0;background:none;color:var(--muted);font-family:inherit;font-size:13px;
+    padding:9px 13px 10px;cursor:pointer;position:relative;white-space:nowrap
+  }
+  .tab.on{color:var(--txt);font-weight:600}
+  .tab.on::after{content:"";position:absolute;left:13px;right:13px;bottom:-1px;height:2px;border-radius:2px;background:linear-gradient(90deg,var(--o),var(--o2))}
+
+  /* ===== 图表 ===== */
+  .chart-box{position:relative}
+  .legend{display:flex;flex-wrap:wrap;gap:10px;font-size:10.5px;color:var(--muted);margin-bottom:8px}
+  .legend span{display:flex;align-items:center;gap:5px}
+  .dot{width:8px;height:8px;border-radius:2px;flex:none}
+  canvas{width:100%;display:block;border-radius:8px}
+  .tip{
+    position:absolute;pointer-events:none;background:#1f242d;border:1px solid var(--line2);
+    border-radius:9px;padding:7px 9px;font-size:11px;line-height:1.6;color:var(--txt);
+    box-shadow:0 8px 24px rgba(0,0,0,.45);opacity:0;transition:opacity .1s;z-index:5;
+    white-space:nowrap
+  }
+
+  /* ===== 表格 ===== */
+  .tbl-wrap{overflow-x:auto;margin:0 -4px}
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  th{color:var(--muted);font-weight:500;text-align:right;padding:8px 6px;border-bottom:1px solid var(--line);white-space:nowrap;font-size:11px}
+  th:first-child,td:first-child{text-align:left}
+  td{padding:9px 6px;border-bottom:1px solid rgba(255,255,255,.045);text-align:right;white-space:nowrap}
+  tr:last-child td{border-bottom:0}
+  .name{color:var(--txt);font-weight:550}
+  .sub{display:block;font-size:10px;color:var(--dim);font-weight:400;margin-top:1px}
+  .keytag{font-family:ui-monospace,Menlo,monospace;font-size:10.5px;color:var(--dim)}
+  .tag{font-size:9.5px;padding:1px 5px;border-radius:5px;border:1px solid var(--line2);color:var(--muted);margin-left:5px}
+  .tag.batch{color:var(--blue);border-color:rgba(74,168,255,.3)}
+  .tag.plugin{color:#b98cff;border-color:rgba(185,140,255,.3)}
+
+  /* ===== 空状态 ===== */
+  .empty{padding:34px 10px;text-align:center}
+  .empty-ico{font-size:26px;opacity:.5;margin-bottom:8px}
+  .empty p{color:var(--muted);font-size:13px;margin:0 0 14px}
+  .btn{
+    border:0;border-radius:11px;padding:10px 18px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;
+    background:linear-gradient(140deg,var(--o),#ff8f24);color:#1a1005;
+    box-shadow:0 6px 18px rgba(255,105,0,.22);transition:.15s
+  }
+  .btn:active{transform:scale(.97)}
+  .btn.ghost{background:transparent;border:1px solid var(--line2);color:var(--txt);box-shadow:none}
+
+  /* ===== 横幅 ===== */
+  .banner{display:none;align-items:flex-start;gap:9px;padding:10px 12px;border-radius:12px;font-size:12px;line-height:1.6;margin-bottom:12px}
+  .banner.err{display:flex;background:rgba(255,90,98,.08);border:1px solid rgba(255,90,98,.25);color:#ffb3b7}
+  .banner.info{display:flex;background:rgba(255,164,27,.07);border:1px solid rgba(255,164,27,.2);color:#ffcf8a}
+  .banner b{color:#fff;font-weight:600}
+  .banner .x{margin-left:auto;color:inherit;opacity:.6;cursor:pointer;flex:none;padding:0 2px}
+
+  /* ===== 设置抽屉 ===== */
+  .mask{position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:.2s;z-index:60}
+  .mask.on{opacity:1;pointer-events:auto}
+  .drawer{
+    position:fixed;left:0;right:0;bottom:0;z-index:61;
+    background:var(--bg2);border-top:1px solid var(--line2);
+    border-radius:20px 20px 0 0;padding:8px 16px calc(20px + env(safe-area-inset-bottom));
+    transform:translateY(102%);transition:transform .26s cubic-bezier(.32,.72,.28,1);
+    max-height:88vh;overflow-y:auto;visibility:hidden
+  }
+  .drawer.on{transform:translateY(0);visibility:visible}
+  .handle{width:38px;height:4px;border-radius:4px;background:#3a414d;margin:6px auto 12px}
+  .drawer h2{font-size:15px;margin:0 0 3px}
+  .drawer .lead{font-size:11.5px;color:var(--dim);margin:0 0 16px}
+  .field{margin-bottom:15px}
+  .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+  .field .hint{font-size:10.5px;color:var(--dim);margin-top:5px;line-height:1.6}
+  input[type=text],input[type=password],input[type=number],select{
+    width:100%;background:#0e1116;border:1px solid var(--line2);border-radius:10px;
+    color:var(--txt);font-family:inherit;font-size:13px;padding:10px 11px;outline:none;transition:.15s
+  }
+  input:focus,select:focus{border-color:rgba(255,105,0,.5);box-shadow:0 0 0 3px rgba(255,105,0,.1)}
+  .pw-row{position:relative}
+  .pw-row .eye{
+    position:absolute;right:8px;top:50%;transform:translateY(-50%);
+    background:none;border:0;color:var(--dim);font-size:11px;cursor:pointer;font-family:inherit;padding:4px 6px
+  }
+  .switch{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#0e1116;border:1px solid var(--line2);border-radius:10px;padding:9px 11px;margin-bottom:15px}
+  .switch .k{font-size:12.5px}
+  .switch .d{font-size:10.5px;color:var(--dim);margin-top:2px}
+  .tg{width:40px;height:22px;border-radius:22px;background:#2a3038;position:relative;flex:none;cursor:pointer;transition:.18s}
+  .tg.on{background:linear-gradient(140deg,var(--o),var(--o2))}
+  .tg i{position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:.18s}
+  .tg.on i{left:21px}
+  .drawer-actions{display:flex;gap:9px;margin-top:6px}
+  .drawer-actions .btn{flex:1;padding:11px}
+  .worker{margin-top:6px;background:#0a0c10;border:1px solid var(--line);border-radius:10px;padding:0;display:none}
+  .worker.on{display:block}
+  .worker pre{
+    margin:0;padding:11px;font-family:ui-monospace,Menlo,monospace;font-size:10.5px;line-height:1.65;
+    color:#a9b3c1;white-space:pre-wrap;word-break:break-all;max-height:210px;overflow:auto
+  }
+  .worker .bar{display:flex;justify-content:space-between;align-items:center;padding:7px 10px;border-bottom:1px solid var(--line);font-size:11px;color:var(--muted)}
+  .worker .bar button{background:none;border:0;color:var(--o2);font-size:11px;font-family:inherit;cursor:pointer}
+
+  .toast{
+    position:fixed;left:50%;bottom:calc(88px + env(safe-area-inset-bottom));
+    transform:translate(-50%,8px);background:#232830;border:1px solid #343c47;
+    color:var(--txt);font-size:12.5px;padding:8px 14px;border-radius:11px;
+    opacity:0;pointer-events:none;transition:.18s;z-index:80;max-width:80vw;text-align:center
+  }
+  .toast.on{opacity:1;transform:translate(-50%,0)}
+  .foot{text-align:center;font-size:10.5px;color:var(--dim);padding:18px 0 6px;line-height:1.7}
+  .foot a{color:var(--dim);text-decoration:none;border-bottom:1px dotted #3a414d}
+  .sync{font-size:10.5px;color:var(--dim);text-align:right;margin:-4px 2px 10px}
+  @media(max-width:360px){
+    .bal-grid{grid-template-columns:repeat(2,1fr)}
+    .bal-amt{font-size:32px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ===== 头部 ===== -->
+  <header>
+    <div class="logo">Mi</div>
+    <div class="titles">
+      <h1>MiMo 用量面板</h1>
+      <p id="subLine">平台余额 · 模型用量 · 日账单</p>
+    </div>
+    <button class="hbtn" id="btnRefresh" title="刷新" aria-label="刷新">
+      <svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3.2-6.9"/><path d="M21 3.5V9h-5.2"/></svg>
+    </button>
+    <button class="hbtn" id="btnSet" title="设置" aria-label="设置">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.9l.06.06a2 2 0 1 1-2.8 2.8l-.06-.06a1.7 1.7 0 0 0-1.9-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 8.9 19.3a1.7 1.7 0 0 0-1.9.34l-.06.06a2 2 0 1 1-2.8-2.8l.06-.06A1.7 1.7 0 0 0 4.5 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.5 9a1.7 1.7 0 0 0-.34-1.9l-.06-.06a2 2 0 1 1 2.8-2.8l.06.06A1.7 1.7 0 0 0 8.9 4.6 1.7 1.7 0 0 0 10 3.05V3a2 2 0 1 1 4 0v.09A1.7 1.7 0 0 0 15 4.6a1.7 1.7 0 0 0 1.9-.34l.06-.06a2 2 0 1 1 2.8 2.8l-.06.06A1.7 1.7 0 0 0 19.4 9c.14.6.6 1.1 1.2 1.25H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.5 1.05z" transform="translate(0 -0.5)"/></svg>
+    </button>
+  </header>
+
+  <div class="accbar" id="accBar"></div>
+
+  <div class="banner" id="banner"><span id="bannerText"></span><span class="x" id="bannerX">✕</span></div>
+
+  <!-- ===== 余额卡 ===== -->
+  <section class="card bal" id="balCard">
+    <div class="bal-top">
+      <div class="bal-label">账户总可用余额
+        <span class="pill ok" id="balPill" style="display:none">可用</span>
+      </div>
+      <div class="card-v" id="balCur">CNY</div>
+    </div>
+    <div class="bal-amt"><span class="cur">¥</span><span id="balTotal">—</span></div>
+    <div class="bal-sub" id="balSub">填入 API Key 后可实时读取</div>
+    <div class="bal-grid">
+      <div class="mini"><div class="mini-k">现金余额</div><div class="mini-v num" id="mCash">—</div></div>
+      <div class="mini"><div class="mini-k">赠金余额</div><div class="mini-v num" id="mGift">—</div></div>
+      <div class="mini"><div class="mini-k">冻结金额</div><div class="mini-v num" id="mFrozen">—</div></div>
+      <div class="mini"><div class="mini-k">可用授信</div><div class="mini-v num" id="mCredit">—</div></div>
+    </div>
+  </section>
+
+  <!-- ===== 概览 ===== -->
+  <div class="ov" id="usageGrid">
+    <div class="ov-i">
+      <div class="ov-k">区间消费 <span id="rangeTag" class="tag">近7天</span></div>
+      <div class="ov-v num" id="ovSpend">—</div>
+      <div class="ov-s" id="ovSpendSub">折后消费金额</div>
+    </div>
+    <div class="ov-i">
+      <div class="ov-k">调用次数</div>
+      <div class="ov-v num" id="ovReq">—</div>
+      <div class="ov-s" id="ovReqSub">—</div>
+    </div>
+    <div class="ov-i">
+      <div class="ov-k">Token 总量</div>
+      <div class="ov-v num" id="ovTok">—</div>
+      <div class="ov-s" id="ovTokSub">—</div>
+    </div>
+    <div class="ov-i">
+      <div class="ov-k">余额可撑时日</div>
+      <div class="ov-v num" id="ovDay">—</div>
+      <div class="ov-s" id="ovDaySub">按区间日均消费估算</div>
+    </div>
+  </div>
+
+  <!-- ===== 区间选择 ===== -->
+  <div class="card" id="rangeCard" style="padding:11px 12px">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+      <div>
+        <div class="card-t">数据区间（UTC 自然日）</div>
+        <div class="card-v" id="dateRange">—</div>
+      </div>
+      <div class="seg" id="segRange">
+        <button data-d="1">今天</button>
+        <button data-d="7" class="on">7天</button>
+        <button data-d="30">30天</button>
+      </div>
+    </div>
+  </div>
+  <div class="sync" id="syncLine">尚未同步</div>
+
+  <!-- ===== Tabs ===== -->
+  <div class="tabs" id="tabs">
+    <button class="tab on" data-tab="trend">趋势</button>
+    <button class="tab" data-tab="model">模型</button>
+    <button class="tab" data-tab="detail">明细</button>
+    <button class="tab" data-tab="bill">日账单</button>
+  </div>
+
+  <section class="card" id="noUsageNote" style="display:none">
+    <div class="card-h"><div class="card-t">仅余额查询</div></div>
+    <div class="hint" id="noUsageText">该供应商没有公开的用量/账单接口，这里只展示账户余额；切回 MiMo 账号可看趋势、模型和日账单。</div>
+  </section>
+
+  <!-- ===== 视图：趋势 ===== -->
+  <div id="view-trend">
+    <section class="card">
+      <div class="card-h">
+        <div class="card-t">每日消费构成（元）</div>
+        <div class="card-v" id="trendSum">—</div>
+      </div>
+      <div class="legend" id="trendLegend">
+        <span><i class="dot" style="background:#ff6900"></i>输入 · 未命中</span>
+        <span><i class="dot" style="background:#ffa41b"></i>输入 · 命中</span>
+        <span><i class="dot" style="background:#ffcd6b"></i>输出</span>
+        <span><i class="dot" style="background:#5c6472"></i>插件</span>
+      </div>
+      <div class="chart-box">
+        <canvas id="chSpend" height="200"></canvas>
+        <div class="tip" id="tipSpend"></div>
+      </div>
+    </section>
+    <section class="card">
+      <div class="card-h">
+        <div class="card-t">每日 Token 构成</div>
+        <div class="card-v" id="trendTok">—</div>
+      </div>
+      <div class="legend">
+        <span><i class="dot" style="background:#ff6900"></i>未命中输入</span>
+        <span><i class="dot" style="background:#ffa41b"></i>命中输入</span>
+        <span><i class="dot" style="background:#ffcd6b"></i>输出</span>
+      </div>
+      <div class="chart-box">
+        <canvas id="chTok" height="200"></canvas>
+        <div class="tip" id="tipTok"></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-h">
+        <div class="card-t">缓存命中收益（估算）</div>
+        <div class="card-v" id="cacheRate">—</div>
+      </div>
+      <div class="ov" style="margin:0">
+        <div class="ov-i" style="background:#0e1116"><div class="ov-k">未命中输入花费</div><div class="ov-v num" id="cacheMissAmt">—</div></div>
+        <div class="ov-i" style="background:#0e1116"><div class="ov-k">若全命中可省</div><div class="ov-v num" id="cacheSave">—</div></div>
+      </div>
+      <div class="hint" id="cacheTip">—</div>
+    </section>
+
+    <section class="card">
+      <div class="card-h">
+        <div class="card-t">余额推演</div>
+        <div class="card-v" id="fcDays">—</div>
+      </div>
+      <div class="ov" style="margin:0">
+        <div class="ov-i" style="background:#0e1116"><div class="ov-k">历史日均消费</div><div class="ov-v num" id="fcAvg">—</div></div>
+        <div class="ov-i" style="background:#0e1116"><div class="ov-k">预计用完</div><div class="ov-v num" id="fcDate">—</div></div>
+      </div>
+      <div class="hint" id="fcTip">—</div>
+    </section>
+  </div>
+
+  <!-- ===== 视图：模型 ===== -->
+  <div id="view-model" style="display:none">
+    <section class="card">
+      <div class="card-h">
+        <div class="card-t">多模型对比</div>
+        <div class="seg" id="segMetric" style="transform:scale(.86);transform-origin:right center">
+          <button data-m="amt" class="on">消费</button>
+          <button data-m="tok">Token</button>
+        </div>
+      </div>
+      <div class="legend" id="multiLegend"></div>
+      <div class="chart-box">
+        <canvas id="chMulti" height="200"></canvas>
+        <div class="tip" id="tipMulti"></div>
+      </div>
+    </section>
+    <section class="card">
+      <div class="card-h"><div class="card-t">按模型聚合</div><div class="card-v" id="modelCount">—</div></div>
+      <div class="tbl-wrap"><table id="tblModel">
+        <thead><tr><th>模型 / 插件</th><th>消费</th><th>请求</th><th>Token</th><th>命中率</th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+    </section>
+    <section class="card">
+      <div class="card-h"><div class="card-t">按 API Key</div></div>
+      <div class="tbl-wrap"><table id="tblKey">
+        <thead><tr><th>API Key</th><th>消费</th><th>请求</th><th>占比</th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+    </section>
+  </div>
+
+  <!-- ===== 视图：明细 ===== -->
+  <div id="view-detail" style="display:none">
+    <section class="card">
+      <div class="card-h"><div class="card-t">逐日逐模型用量</div><div class="card-v" id="detailCount">—</div></div>
+      <div class="tbl-wrap"><table id="tblDetail">
+        <thead><tr><th>日期 / 模型</th><th>消费</th><th>请求</th><th>Token</th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+    </section>
+  </div>
+
+  <!-- ===== 视图：日账单 ===== -->
+  <div id="view-bill" style="display:none">
+    <section class="card">
+      <div class="card-h"><div class="card-t">账单口径合计</div></div>
+      <div class="ov" style="margin:0">
+        <div class="ov-i" style="background:#0e1116"><div class="ov-k">原始金额</div><div class="ov-v num" id="billOri">—</div></div>
+        <div class="ov-i" style="background:#0e1116"><div class="ov-k">折扣减免</div><div class="ov-v num" id="billDis">—</div></div>
+        <div class="ov-i" style="background:#0e1116"><div class="ov-k">赠金抵扣</div><div class="ov-v num" id="billGift">—</div></div>
+        <div class="ov-i" style="background:#0e1116"><div class="ov-k">最终实付</div><div class="ov-v num" id="billPaid">—</div></div>
+      </div>
+    </section>
+    <section class="card">
+      <div class="card-h"><div class="card-t">每日账单</div><div class="card-v" id="billDays">—</div></div>
+      <div class="tbl-wrap"><table id="tblBill">
+        <thead><tr><th>日期</th><th>原价</th><th>折扣</th><th>赠金</th><th>实付</th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+    </section>
+  </div>
+
+  <div class="foot">
+    数据来源 <span id="footSrc">api.xiaomimimo.com</span> 账务查询 OpenAPI · 金额为折后口径<br>
+    Key 仅存于本机浏览器，不会外发
+  </div>
+</div>
+
+<!-- ===== 设置抽屉 ===== -->
+<div class="toast" id="toast"></div>
+<div class="mask" id="mask"></div>
+<div class="drawer" id="drawer">
+  <div class="handle"></div>
+  <h2>连接设置</h2>
+  <p class="lead">使用控制台创建的普通 API Key（sk- 开头）。</p>
+
+  <div class="field">
+    <label for="inBrand">供应商</label>
+    <select id="inBrand"></select>
+
+    <label for="inAccName" style="display:block;margin-top:10px">账号名称</label>
+    <input id="inAccName" placeholder="例如 主力账号" style="margin-top:6px">
+
+    <div id="customBox" style="display:none">
+      <label for="inCustomUrl" style="display:block;margin-top:10px">余额接口地址</label>
+      <input id="inCustomUrl" placeholder="https://api.example.com/v1/balance" style="margin-top:6px">
+      <label for="inCustomPath" style="display:block;margin-top:10px">余额字段路径</label>
+      <input id="inCustomPath" placeholder="data.balance" style="margin-top:6px">
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:10px">
+      <button class="btn ghost" id="btnAddAcc" style="flex:1">新增账号</button>
+      <button class="btn ghost" id="btnDelAcc" style="flex:1">删除当前</button>
+    </div>
+  </div>
+
+  <div class="field">
+    <label for="inKey">API Key</label>
+    <div class="pw-row">
+      <input type="password" id="inKey" placeholder="sk-xxxxxxxxxxxxxxxx" autocomplete="off" spellcheck="false" style="padding-right:96px">
+      <button class="eye" id="btnPaste" style="right:46px">粘贴</button>
+      <button class="eye" id="btnEye">显示</button>
+    </div>
+    <div class="hint">平台仅提供个人账号登录，Key 在控制台「API Keys」创建，创建后只显示一次。</div>
+  </div>
+
+  <div class="switch" id="swDemo">
+    <div><div class="k">演示数据</div><div class="d">不请求接口，用本地模拟数据预览全部图表</div></div>
+    <div class="tg" id="tgDemo"><i></i></div>
+  </div>
+
+  <div class="switch" id="swSave">
+    <div><div class="k">记住 Key</div><div class="d">存入本机浏览器；关闭则仅本次页面有效</div></div>
+    <div class="tg on" id="tgSave"><i></i></div>
+  </div>
+
+  <div class="field">
+    <label for="inAlert">余额预警阈值（元）</label>
+    <input type="number" id="inAlert" placeholder="0" min="0" step="1">
+    <div class="hint">总可用余额低于该值时，顶部显示提醒。</div>
+  </div>
+
+  <div class="switch" id="swPush">
+    <div><div class="k">余额预警通知</div><div class="d">后台定时检查，低于阈值时推送到通知栏</div></div>
+    <div class="tg" id="tgPush"><i></i></div>
+  </div>
+
+  <div class="field" id="pushEveryField">
+    <label for="inPushEvery">后台检查频率</label>
+    <select id="inPushEvery">
+      <option value="6">每 6 小时</option>
+      <option value="12">每 12 小时</option>
+      <option value="24">每天一次</option>
+    </select>
+  </div>
+
+  <div class="field">
+    <label for="inAuto">自动刷新</label>
+    <select id="inAuto">
+      <option value="0">关闭</option>
+      <option value="60">每 1 分钟</option>
+      <option value="300">每 5 分钟</option>
+    </select>
+  </div>
+
+  <div class="field" id="padField">
+    <label for="inPad">底部留白</label>
+    <select id="inPad">
+      <option value="-1">自动（跟随系统导航条）</option>
+      <option value="0">不留白</option>
+      <option value="8">8 dp</option>
+      <option value="16">16 dp</option>
+      <option value="24">24 dp</option>
+      <option value="32">32 dp</option>
+      <option value="40">40 dp</option>
+    </select>
+    <div class="hint" id="diagLine">布局诊断：—</div>
+    <button class="btn ghost" id="btnPin" style="margin-top:10px;width:100%">添加到桌面</button>
+    <div class="hint" id="pinLine">点一下会弹出系统确认框，直接把余额小组件放到桌面。</div>
+  </div>
+
+  <div class="drawer-actions">
+    <button class="btn ghost" id="btnClear">清除本地数据</button>
+    <button class="btn" id="btnSave">保存并同步</button>
+  </div>
+</div>
+
+<script>
+/* ===================================================================
+   MiMo 用量面板
+   接口：GET /v1/platform/balance
+        GET /v1/platform/usage/daily?start_date&end_date
+        GET /v1/platform/billing/daily?start_date&end_date
+   =================================================================== */
+(function(){
+  "use strict";
+
+  var LS = "mimo_panel_v1";
+  var API_ORIGIN = "https://api.xiaomimimo.com";
+
+  var state = {
+    key: "",
+    proxy: "",
+    demo: false,
+    saveKey: true,
+    alert: 0,
+    autoSec: 0,
+    pad: 0,
+    push: false,
+    pushEvery: 6,
+    metric: "amt",
+    accounts: [],
+    accIdx: 0,
+    multiHidden: {},
+    days: 7,
+    tab: "trend",
+    loading: false,
+    balance: null,
+    usage: [],
+    bills: [],
+    range: {start:"", end:""},
+    lastSync: null,
+    timer: null,
+    cooldownUntil: 0,
+    rateLimited: false,
+    rateTimer: null,
+    billRange: null,
+    usageRange: null
+  };
+
+  /* ---------- 存取 ---------- */
+  function loadCfg(){
+    try{
+      var raw = localStorage.getItem(LS);
+      if(!raw) return;
+      var o = JSON.parse(raw);
+      state.key = o.key || "";
+      state.accounts = Array.isArray(o.accounts) ? o.accounts : [];
+      state.accIdx = Number(o.accIdx) || 0;
+      if(!state.accounts.length && state.key){
+        state.accounts = [{name:"MiMo", brand:"mimo", key:state.key}];
+        state.accIdx = 0;
+      }
+      state.proxy = o.proxy || "";
+      state.saveKey = o.saveKey !== false;
+      state.alert = Number(o.alert) || 0;
+      state.autoSec = Number(o.autoSec) || 0;
+      state.pad = (o.pad === undefined || o.pad === null) ? 0 : Number(o.pad);
+      state.push = !!o.push;
+      state.pushEvery = Number(o.pushEvery) || 6;
+      state.days = Number(o.days) || 7;
+    }catch(e){}
+  }
+  function saveCfg(){
+    try{
+      localStorage.setItem(LS, JSON.stringify({
+        key: state.saveKey ? state.key : "",
+        accounts: state.accounts.map(function(a){
+          return {name:a.name, brand:a.brand, key: state.saveKey ? a.key : "", url:a.url || "", path:a.path || "", currency:a.currency || ""};
+        }),
+        accIdx: state.accIdx,
+        proxy: state.proxy,
+        saveKey: state.saveKey,
+        alert: state.alert,
+        autoSec: state.autoSec,
+        pad: state.pad,
+        push: state.push,
+        pushEvery: state.pushEvery,
+        days: state.days
+      }));
+    }catch(e){}
+  }
+
+  /* ---------- 工具 ---------- */
+  function $(id){ return document.getElementById(id); }
+  function num(v){ var n = parseFloat(v); return isFinite(n) ? n : 0; }
+  function money(n, d){
+    d = (d === undefined) ? 2 : d;
+    if(Math.abs(n) >= 10000) return n.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,",");
+    return n.toFixed(d);
+  }
+  function money4(n){
+    if(n === 0) return "0.00";
+    if(Math.abs(n) < 0.01) return n.toFixed(4);
+    return n.toFixed(2);
+  }
+  function tok(n){
+    n = Number(n) || 0;
+    if(n >= 1e9) return (n/1e9).toFixed(2) + "B";
+    if(n >= 1e6) return (n/1e6).toFixed(2) + "M";
+    if(n >= 1e3) return (n/1e3).toFixed(1) + "K";
+    return String(n);
+  }
+  function pct(a, b){ return b > 0 ? (a / b * 100).toFixed(1) + "%" : "—"; }
+  function utcDate(d){ return d.toISOString().slice(0,10); }
+  function mdStr(s){ return s ? s.slice(5).replace("-","/") : "—"; }
+  function esc(s){
+    return String(s === null || s === undefined ? "" : s)
+      .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
+
+  function computeRange(days){
+    var now = new Date();
+    var end = utcDate(now);
+    var startD = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - (days - 1)));
+    return {start: utcDate(startD), end: end};
+  }
+
+  /* ---------- 请求 ---------- */
+  // APK 内存在原生 HTTP 桥，请求不经浏览器内核，因此没有跨域限制
+  var NATIVE = !!(window.MimoNative && typeof window.MimoNative.get === "function");
+
+  function buildUrl(path){
+    if(state.proxy){
+      return state.proxy.replace(/\/+$/,"") + path;
+    }
+    return API_ORIGIN + path;
+  }
+  function parseMsg(code, t){
+    var msg = "HTTP " + code;
+    try{
+      var j = JSON.parse(t);
+      msg = (j.error && (j.error.message || j.error.code)) || j.message || msg;
+      if(typeof msg === "object") msg = JSON.stringify(msg);
+    }catch(e){ if(t && t.length < 160) msg += " " + t; }
+    return msg;
+  }
+  function nativeGetAbs(url, key){
+    var raw = window.MimoNative.get(url, key || state.key);
+    var env;
+    try{ env = JSON.parse(raw); }
+    catch(e){ throw new Error("原生通道返回格式异常"); }
+    var code = parseInt(env.status, 10) || 0;
+    var text = env.body || "";
+    if(code === 0) throw new Error(env.error || "网络请求失败");
+    if(code >= 400){
+      var err = new Error(parseMsg(code, text));
+      err.status = code;
+      throw err;
+    }
+    try{ return JSON.parse(text); }
+    catch(e){ throw new Error("返回内容不是合法 JSON"); }
+  }
+
+  function nativeGet(path){
+    var raw = window.MimoNative.get(buildUrl(path), state.key);
+    var env;
+    try{ env = JSON.parse(raw); }
+    catch(e){ throw new Error("原生通道返回格式异常"); }
+    var code = parseInt(env.status, 10) || 0;
+    var text = env.body || "";
+    if(code === 0){
+      throw new Error(env.error || "网络请求失败");
+    }
+    if(code >= 400){
+      var err = new Error(parseMsg(code, text));
+      err.status = code;
+      throw err;
+    }
+    try{ return JSON.parse(text); }
+    catch(e){ throw new Error("返回内容不是合法 JSON"); }
+  }
+  /* ---------- 多供应商 ---------- */
+  var BRANDS = {
+    mimo:   {label:"MiMo",      usage:true,  url:"https://api.xiaomimimo.com/v1/platform/balance", parse:"mimo"},
+    deepseek:{label:"DeepSeek", usage:false, url:"https://api.deepseek.com/user/balance",           parse:"mimo"},
+    moonshot:{label:"Kimi",     usage:false, url:"https://api.moonshot.cn/v1/users/me/balance",     parse:"moonshot"},
+    sf:     {label:"硅基流动",   usage:false, url:"https://api.siliconflow.cn/v1/user/info",         parse:"sf"},
+    or:     {label:"OpenRouter",usage:false, url:"https://openrouter.ai/api/v1/credits",            parse:"or"},
+    custom: {label:"自定义",     usage:false, url:"",                                               parse:"custom"}
+  };
+
+  function acc(){
+    if(!state.accounts) state.accounts = [];
+    return state.accounts[state.accIdx] || null;
+  }
+  function brandOf(a){ return BRANDS[(a && a.brand) || "mimo"] || BRANDS.mimo; }
+  function hasUsage(){ var a = acc(); return brandOf(a).usage; }
+
+  function pick(o, path){
+    return String(path || "").split(".").reduce(function(x, k){
+      return (x && x[k] !== undefined) ? x[k] : undefined;
+    }, o);
+  }
+
+  function normalizeBalance(o, parse, a){
+    if(parse === "mimo" || parse === "deepseek"){
+      var arr = o.balance_infos || [];
+      var info = arr[0] || {};
+      for(var i = 0; i < arr.length; i++){
+        if(String(arr[i].currency || "").toUpperCase() === "CNY") info = arr[i];
+      }
+      return {
+        currency: info.currency || "CNY",
+        total_available: num(info.total_available !== undefined ? info.total_available : info.total_balance),
+        cash_balance: num(info.cash_balance !== undefined ? info.cash_balance : info.topped_up_balance),
+        gift_balance: num(info.gift_balance !== undefined ? info.gift_balance : info.granted_balance),
+        frozen_balance: num(info.frozen_balance),
+        credit_available: num(info.credit_available),
+        credit_limit: num(info.credit_limit)
+      };
+    }
+    if(parse === "moonshot"){
+      var d = o.data || {};
+      return {currency:"CNY", total_available:num(d.available_balance), cash_balance:num(d.cash_balance),
+              gift_balance:num(d.voucher_balance), frozen_balance:0, credit_available:0, credit_limit:0};
+    }
+    if(parse === "sf"){
+      var d2 = o.data || {};
+      return {currency:"CNY", total_available:num(d2.totalBalance !== undefined ? d2.totalBalance : d2.balance),
+              cash_balance:num(d2.chargeBalance), gift_balance:0, frozen_balance:0, credit_available:0, credit_limit:0};
+    }
+    if(parse === "or"){
+      var d3 = o.data || {};
+      var left = (Number(d3.total_credits) || 0) - (Number(d3.total_usage) || 0);
+      return {currency:"USD", total_available:left, cash_balance:left, gift_balance:0, frozen_balance:0, credit_available:0, credit_limit:0};
+    }
+    var v = pick(o, (a && a.path) || "data.balance");
+    return {currency:(a && a.currency) || "CNY", total_available:Number(v) || 0,
+            cash_balance:0, gift_balance:0, frozen_balance:0, credit_available:0, credit_limit:0};
+  }
+
+  function fetchUrl(url, key){
+    if(NATIVE){
+      return new Promise(function(res, rej){
+        setTimeout(function(){
+          try{ res(nativeGetAbs(url, key)); }catch(e){ rej(e); }
+        }, 0);
+      });
+    }
+    return fetch(url, {method:"GET", headers:{"Authorization":"Bearer " + key, "api-key": key, "Accept":"application/json"}, cache:"no-store"})
+      .then(function(res){
+        return res.text().then(function(t){
+          if(!res.ok){
+            var err = new Error(parseMsg(res.status, t));
+            err.status = res.status;
+            throw err;
+          }
+          try{ return JSON.parse(t); }catch(e){ throw new Error("返回不是 JSON"); }
+        });
+      });
+  }
+
+  function fetchJson(path){
+    if(NATIVE){
+      return new Promise(function(res, rej){
+        setTimeout(function(){
+          try{ res(nativeGet(path)); }
+          catch(e){ rej(e); }
+        }, 0);
+      });
+    }
+    return fetch(buildUrl(path), {
+      method: "GET",
+      headers: {
+        "Authorization": "Bearer " + state.key,
+        "api-key": state.key,
+        "Accept": "application/json"
+      },
+      cache: "no-store"
+    }).then(function(res){
+      return res.text().then(function(t){
+        if(!res.ok){
+          var err = new Error(parseMsg(res.status, t));
+          err.status = res.status;
+          throw err;
+        }
+        try{ return JSON.parse(t); }
+        catch(e){ throw new Error("返回内容不是合法 JSON"); }
+      });
+    });
+  }
+
+  function apiBalance(){
+    var a = acc() || {brand:"mimo", key: state.key};
+    if(state.demo) return Promise.resolve(demoData().balance);
+    var B = brandOf(a);
+    var url = (a.brand === "custom") ? (a.url || "") : B.url;
+    if(!url) return Promise.reject(new Error("未填写余额接口地址"));
+    return fetchUrl(url, a.key).then(function(body){
+      return {
+        is_available: (body.is_available === undefined ? true : !!body.is_available),
+        balance_infos: [normalizeBalance(body, B.parse, a)]
+      };
+    });
+  }
+  function apiUsage(s, e){
+    return fetchJson("/v1/platform/usage/daily?start_date=" + s + "&end_date=" + e);
+  }
+  function apiBill(s, e){
+    return fetchJson("/v1/platform/billing/daily?start_date=" + s + "&end_date=" + e);
+  }
+
+  /* ---------- 演示数据 ---------- */
+  function demoData(){
+    var days = state.days;
+    var t = computeRange(days);
+    var models = [
+      {name:"mimo-v2.6-pro",        inMiss:0.003,  out:0.006,  hit:0.000025},
+      {name:"mimo-v2.6-flash",      inMiss:0.001,  out:0.002,  hit:0.00002},
+      {name:"mimo-v2.6-pro-ultra",  inMiss:0.03,   out:0.06,   hit:0.00025}
+    ];
+    var keys = ["sk-****3f2a","sk-****9c7d"];
+    var usage = [], bills = [];
+    var seed = 7;
+    function rnd(){ seed = (seed * 9301 + 49297) % 233280; return seed / 233280; }
+    for(var i = 0; i < days; i++){
+      var d = new Date(t.start + "T00:00:00Z");
+      d.setUTCDate(d.getUTCDate() + i);
+      var ds = utcDate(d);
+      var dayTotal = 0;
+      models.forEach(function(m, mi){
+        keys.forEach(function(k, ki){
+          if(rnd() < 0.25) return;
+          var reqCount = Math.floor(8 + rnd() * 90 * (mi === 0 ? 1.6 : 1));
+          var hitT = Math.floor(reqCount * (200 + rnd() * 2600));
+          var missT = Math.floor(reqCount * (120 + rnd() * 400));
+          var outT = Math.floor(reqCount * (150 + rnd() * 700));
+          var amt = hitT * m.hit + missT * m.inMiss + outT * m.out;
+          dayTotal += amt;
+          usage.push({
+            date: ds, resource_type: "model", name: m.name, masked_api_key: k,
+            currency: "CNY", consumed_amount: amt.toFixed(6),
+            input_cache_hit_amount: (hitT * m.hit).toFixed(6),
+            input_cache_miss_amount: (missT * m.inMiss).toFixed(6),
+            output_amount: (outT * m.out).toFixed(6),
+            total_tokens: hitT + missT + outT,
+            input_cache_hit_tokens: hitT,
+            input_cache_miss_tokens: missT,
+            output_tokens: outT,
+            request_count: reqCount,
+            audio_transcription_seconds: null,
+            inference_type: rnd() > 0.85 ? "batch" : "online"
+          });
+        });
+      });
+      if(rnd() > 0.6){
+        var pamt = (rnd() * 0.02);
+        dayTotal += pamt;
+        usage.push({
+          date: ds, resource_type: "plugin", name: "web-search",
+          masked_api_key: keys[0], currency:"CNY",
+          consumed_amount: pamt.toFixed(6), request_count: Math.floor(1 + rnd() * 6)
+        });
+      }
+      var original = dayTotal * 1.18;
+      var discount = original - dayTotal;
+      var gift = Math.min(dayTotal * 0.3, 1.2);
+      bills.push({
+        date: ds, currency: "CNY",
+        original_amount: original.toFixed(2),
+        discount_amount: discount.toFixed(2),
+        gift_amount: gift.toFixed(2),
+        final_paid_amount: (dayTotal - gift).toFixed(2)
+      });
+    }
+    bills.sort(function(a,b){ return a.date < b.date ? 1 : -1; });
+    return {
+      balance: {
+        object: "balance", is_available: true,
+        balance_infos: [{
+          currency: "CNY", cash_balance: "328.40", gift_balance: "12.00",
+          frozen_balance: "0.00", credit_limit: "0.00",
+          credit_available: "0.00", total_available: "340.40"
+        }]
+      },
+      usage: usage,
+      bills: bills
+    };
+  }
+
+  /* ---------- 同步 ---------- */
+  var DEMO_NOTE = "演示数据：所有数字均为本地模拟，用于预览界面与图表。关掉「演示数据」并填入 API Key 即可读取真实账务。";
+
+  var MIN_GAP = 20000;          // 手动刷新最小间隔，防限流
+  var RATE_COOLDOWN = 45000;    // 命中限流后的冷却时间
+
+  function isRateLimited(text){
+    return /rate.?limit|too many requests|限流|429/i.test(text || "");
+  }
+
+  function countdown(until, onDone){
+    var t = setInterval(function(){
+      var left = Math.ceil((until - Date.now()) / 1000);
+      if(left <= 0){
+        clearInterval(t);
+        onDone && onDone();
+        return;
+      }
+      var keep = state.balance ? "，已保留上次数据" : "";
+      $("bannerText").innerHTML = "<b>接口限流中</b>" + keep + "，" + left + " 秒后自动重试";
+    }, 1000);
+    return t;
+  }
+
+  function sync(force){
+    if(state.loading) return;
+
+    var now = Date.now();
+    if(!force && state.cooldownUntil && now < state.cooldownUntil){
+      var wait = Math.ceil((state.cooldownUntil - now) / 1000);
+      if(state.rateLimited){
+        showBanner("info", "<b>接口限流中</b>，已保留上次数据，" + wait + " 秒后自动重试");
+      }else{
+        showBanner("info", "刚刷新过，接口有频率限制，" + wait + " 秒后可再手动刷新");
+      }
+      return;
+    }
+
+    state.range = computeRange(state.days);
+    $("dateRange").textContent = state.range.start + " → " + state.range.end;
+
+    if(state.demo){
+      var d = demoData();
+      state.balance = d.balance;
+      state.usage = d.usage;
+      state.bills = d.bills;
+      state.lastSync = new Date();
+      renderAll();
+      showBanner("info", DEMO_NOTE);
+      return;
+    }
+
+    if(!state.key){
+      clearData();
+      setSub("填入 API Key 后可实时读取");
+      return;
+    }
+
+    state.loading = true;
+    $("btnRefresh").classList.add("spin");
+    var s = state.range.start, e = state.range.end;
+
+    // 账单只在「日账单」页需要时再请求，减少一次并发
+    var useU = hasUsage();
+    if(!useU){
+      state.usage = [];
+      state.bills = [];
+    }
+    var withBill = useU && (state.tab === "bill");
+    var plan = ["balance"];
+    var tasks = [apiBalance()];
+    if(useU){ plan.push("usage"); tasks.push(apiUsage(s, e)); }
+    if(withBill){ plan.push("bill"); tasks.push(apiBill(s, e)); }
+
+    Promise.allSettled(tasks).then(function(res){
+      state.loading = false;
+      $("btnRefresh").classList.remove("spin");
+
+      var errs = [];
+      var hasRate = false;
+
+      plan.forEach(function(kind, i){
+        var r = res[i];
+        if(!r) return;
+        if(r.status === "fulfilled"){
+          if(kind === "balance") state.balance = r.value;
+          if(kind === "usage"){
+            state.usage = (r.value && r.value.data) || [];
+            state.usageRange = state.range.start + "_" + state.range.end;
+          }
+          if(kind === "bill"){
+            state.bills = (r.value && r.value.data) || [];
+            state.billRange = state.usageRange;
+          }
+        }else{
+          errs.push((kind === "balance" ? "余额：" : kind === "usage" ? "用量：" : "账单：") + r.reason.message);
+          hasRate = hasRate || isRateLimited(r.reason.message);
+        }
+      });
+
+      // 非用量型供应商：只展示余额，用量/账单按余额快照推算
+      if(!useU){
+        errs = errs.slice(0, 1);
+        snapRecord();
+        applySynth(state.range);
+        state.usageRange = state.range.start + "_" + state.range.end;
+        state.billRange = state.usageRange;
+      }
+
+      state.lastSync = new Date();
+      renderAll();
+
+      var now2 = Date.now();
+      if(hasRate){
+        state.rateLimited = true;
+        state.cooldownUntil = now2 + RATE_COOLDOWN;
+        showBanner("info", "<b>接口限流中</b>，已保留上次数据，请稍候自动重试");
+        if(state.rateTimer) clearInterval(state.rateTimer);
+        state.rateTimer = countdown(state.cooldownUntil, function(){
+          state.rateLimited = false;
+          state.rateTimer = null;
+          sync(true);
+        });
+        return;
+      }
+
+      // 正常成功也设一个短冷却，防止连点
+      state.rateLimited = false;
+      state.cooldownUntil = now2 + MIN_GAP;
+      if(state.rateTimer){ clearInterval(state.rateTimer); state.rateTimer = null; }
+
+      if(errs.length === tasks.length){
+        var hint = "接口请求失败。请检查 Key 是否有效、手机是否联网；本 App 走原生 HTTP，不受浏览器跨域限制。";
+        if(/401|403/.test(errs.join(""))){
+          hint = "鉴权失败（401/403）：Key 可能无效、已删除，或用的是 Token Plan 的 tp- Key（该面板需按量付费的 sk- Key）。";
+        }
+        showBanner("err", "<b>读取失败</b><br>" + esc(errs[0]) + "<br>" + hint);
+      }else if(errs.length > 0){
+        showBanner("info", "部分接口失败：" + esc(errs.join(" · ")));
+      }else{
+        hideBanner();
+      }
+    });
+  }
+
+  function ensureBills(){
+    if(state.demo) return Promise.resolve();
+    var rk = state.range.start + "_" + state.range.end;
+    if(state.billRange === rk) return Promise.resolve();
+    return apiBill(state.range.start, state.range.end).then(function(v){
+      state.bills = (v && v.data) || [];
+      state.billRange = rk;
+      renderBill();
+    }).catch(function(){});
+  }
+
+  function clearData(){
+    state.balance = null;
+    state.usage = [];
+    state.bills = [];
+    state.lastSync = null;
+    renderAll();
+  }
+
+  function showBanner(type, html){
+    var b = $("banner");
+    b.className = "banner " + type;
+    $("bannerText").innerHTML = html;
+  }
+  function hideBanner(){ $("banner").className = "banner"; }
+
+  function setSub(t){ $("balSub").textContent = t; }
+
+  /* ---------- 渲染：余额 ---------- */
+  function renderBalance(){
+    var b = state.balance;
+    if(!b || !b.balance_infos || !b.balance_infos.length){
+      $("balTotal").textContent = "—";
+      $("balCur").textContent = "CNY";
+      $("balPill").style.display = "none";
+      ["mCash","mGift","mFrozen","mCredit"].forEach(function(id){ $(id).textContent = "—"; });
+      if(!state.key && !state.demo) setSub("填入 API Key 后可实时读取");
+      else setSub("暂无余额数据");
+      return;
+    }
+    var info = b.balance_infos[0];
+    var curName = info.currency || "CNY";
+    $("balCur").textContent = curName;
+    $("balTotal").textContent = money(num(info.total_available));
+    var symbolEl = document.querySelector("#balCard .bal-amt .cur");
+    if(symbolEl) symbolEl.textContent = (curName === "USD" || curName === "USDT") ? "$" : "¥";
+    $("mCash").textContent = money(num(info.cash_balance));
+    $("mGift").textContent = money(num(info.gift_balance));
+    $("mFrozen").textContent = money(num(info.frozen_balance));
+    var credit = num(info.credit_available);
+    $("mCredit").textContent = credit > 0 ? money(credit) : "0.00";
+
+    var pill = $("balPill");
+    pill.style.display = "inline-block";
+    var total = num(info.total_available);
+    if(!b.is_available || total <= 0){
+      pill.className = "pill bad"; pill.textContent = "不可用";
+    }else if(state.alert > 0 && total < state.alert){
+      pill.className = "pill warn"; pill.textContent = "低于预警线";
+    }else{
+      pill.className = "pill ok"; pill.textContent = "可用";
+    }
+
+    var parts = [];
+    parts.push("含授信 " + money(credit) + " 元");
+    if(num(info.frozen_balance) > 0) parts.push("冻结 " + money(num(info.frozen_balance)));
+    setSub(parts.join(" · "));
+  }
+
+  /* ---------- 余额快照推算（用于只有余额接口的厂商）---------- */
+  var SNAP_KEY = "mimo.snap.v1";
+  function snapAll(){
+    try{ return JSON.parse(localStorage.getItem(SNAP_KEY) || "{}"); }catch(e){ return {}; }
+  }
+  function snapSave(o){
+    try{ localStorage.setItem(SNAP_KEY, JSON.stringify(o)); }catch(e){}
+  }
+  function snapId(){
+    var a = acc();
+    return a ? ((a.name || "") + "|" + (a.brand || "mimo")) : "default";
+  }
+  function todayStr(){
+    var d = new Date();
+    return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2);
+  }
+  function snapRecord(){
+    if(state.demo || hasUsage()) return;
+    var b = state.balance;
+    if(!b || !b.balance_infos || !b.balance_infos.length) return;
+    var all = snapAll(), k = snapId();
+    var m = all[k] || (all[k] = {});
+    m[todayStr()] = {bal: num(b.balance_infos[0].total_available), cur: b.balance_infos[0].currency || "CNY"};
+    var ks = Object.keys(m).sort();
+    while(ks.length > 120) delete m[ks.shift()];
+    all[k] = m;
+    snapSave(all);
+  }
+  function snapDays(){
+    var m = snapAll()[snapId()] || {};
+    var ks = Object.keys(m).sort();
+    var out = [];
+    for(var i = 1; i < ks.length; i++){
+      var delta = m[ks[i - 1]].bal - m[ks[i]].bal;
+      if(delta <= 0.0001) continue;
+      out.push({date: ks[i], amt: delta});
+    }
+    return out;
+  }
+  function applySynth(range){
+    var a = acc();
+    var label = (brandOf(a).label || "该厂商") + " 全量消耗";
+    var days = snapDays().filter(function(x){ return x.date >= range.start && x.date <= range.end; });
+    state.usage = days.map(function(x){
+      return {
+        date: x.date, resource_type: "model", name: label, masked_api_key: "余额快照",
+        currency: (a && a.currency) || "CNY", consumed_amount: x.amt.toFixed(6),
+        input_cache_hit_amount: "0", input_cache_miss_amount: "0", output_amount: x.amt.toFixed(6),
+        total_tokens: 0, input_cache_hit_tokens: 0, input_cache_miss_tokens: 0, output_tokens: 0,
+        request_count: 0, inference_type: "online", synth: true
+      };
+    });
+    state.bills = days.map(function(x){
+      return {
+        date: x.date, original_amount: x.amt.toFixed(6), discount_amount: "0",
+        gift_amount: "0", final_paid_amount: x.amt.toFixed(6), currency: (a && a.currency) || "CNY", synth: true
+      };
+    });
+  }
+
+  /* ---------- 聚合 ---------- */
+  function aggUsage(){
+    var byDay = {};   // date -> {miss, hit, out, plugin, tokens..., req}
+    var byModel = {};
+    var byKey = {};
+    var total = {amt:0, req:0, tok:0, hit:0, miss:0, out:0};
+
+    state.usage.forEach(function(r){
+      var d = r.date;
+      if(!byDay[d]) byDay[d] = {date:d, miss:0, hit:0, out:0, plugin:0, amt:0, req:0, tok:0, hitT:0, missT:0, outT:0};
+      var day = byDay[d];
+      var amt = num(r.consumed_amount);
+      day.amt += amt;
+      day.req += Number(r.request_count) || 0;
+      total.amt += amt;
+      total.req += Number(r.request_count) || 0;
+
+      if(r.resource_type === "model"){
+        day.miss += num(r.input_cache_miss_amount);
+        day.hit  += num(r.input_cache_hit_amount);
+        day.out  += num(r.output_amount);
+        day.tok += Number(r.total_tokens) || 0;
+        day.hitT += Number(r.input_cache_hit_tokens) || 0;
+        day.missT += Number(r.input_cache_miss_tokens) || 0;
+        day.outT += Number(r.output_tokens) || 0;
+
+        total.tok += Number(r.total_tokens) || 0;
+        total.hit += Number(r.input_cache_hit_tokens) || 0;
+        total.miss += Number(r.input_cache_miss_tokens) || 0;
+        total.out += Number(r.output_tokens) || 0;
+
+        var mk = r.name + "|" + (r.inference_type || "");
+        if(!byModel[mk]) byModel[mk] = {name:r.name, type:r.inference_type, amt:0, req:0, tok:0, hitT:0, missT:0, outT:0, hitAmt:0, missAmt:0, isPlugin:false};
+        var m = byModel[mk];
+        m.amt += amt; m.req += Number(r.request_count) || 0;
+        m.tok += Number(r.total_tokens) || 0;
+        m.hitT += Number(r.input_cache_hit_tokens) || 0;
+        m.missT += Number(r.input_cache_miss_tokens) || 0;
+        m.outT += Number(r.output_tokens) || 0;
+        m.hitAmt += num(r.input_cache_hit_amount);
+        m.missAmt += num(r.input_cache_miss_amount);
+      }else{
+        day.plugin += amt;
+        var pk = r.name + "|plugin";
+        if(!byModel[pk]) byModel[pk] = {name:r.name, type:"plugin", amt:0, req:0, tok:0, hitT:0, missT:0, outT:0, hitAmt:0, missAmt:0, isPlugin:true};
+        byModel[pk].amt += amt; byModel[pk].req += Number(r.request_count) || 0;
+      }
+
+      var k = r.masked_api_key || "—";
+      if(!byKey[k]) byKey[k] = {k:k, amt:0, req:0};
+      byKey[k].amt += amt; byKey[k].req += Number(r.request_count) || 0;
+    });
+
+    // 补齐区间内没有数据的日期
+    var cats = [];
+    var s = state.range.start;
+    if(s){
+      var d0 = new Date(s + "T00:00:00Z");
+      for(var i = 0; i < state.days; i++){
+        var ds = utcDate(new Date(Date.UTC(d0.getUTCFullYear(), d0.getUTCMonth(), d0.getUTCDate() + i)));
+        cats.push(ds);
+        if(!byDay[ds]) byDay[ds] = {date:ds, miss:0, hit:0, out:0, plugin:0, amt:0, req:0, tok:0, hitT:0, missT:0, outT:0};
+      }
+    }else{
+      cats = Object.keys(byDay).sort();
+    }
+
+    return {
+      byDay: byDay, cats: cats, byModel: byModel, byKey: byKey, total: total
+    };
+  }
+
+  /* ---------- 渲染：概览 ---------- */
+  function renderOverview(agg){
+    var t = agg.total;
+    $("rangeTag").textContent = state.days === 1 ? "今天" : "近" + state.days + "天";
+    $("ovSpend").textContent = "¥" + money4(t.amt);
+    $("ovSpendSub").textContent = t.req > 0 ? ("日均 ¥" + money4(t.amt / state.days)) : "折后消费金额";
+    if(hasUsage()){
+      $("ovReq").textContent = tok(t.req) === String(t.req) ? String(t.req) : tok(t.req);
+      $("ovReqSub").textContent = t.req > 0 ? ("日均 " + Math.round(t.req / state.days) + " 次") : "—";
+      $("ovTok").textContent = tok(t.tok);
+      $("ovTokSub").textContent = t.tok > 0 ? ("命中缓存 " + pct(t.hit, t.tok)) : "—";
+    }else{
+      $("ovReq").textContent = "—";
+      $("ovReqSub").textContent = "该厂商不支持";
+      $("ovTok").textContent = "—";
+      $("ovTokSub").textContent = "该厂商不支持";
+    }
+
+    var bal = state.balance && state.balance.balance_infos && state.balance.balance_infos[0];
+    var avail = bal ? num(bal.total_available) : 0;
+    var perDay = t.amt / state.days;
+    if(perDay > 0.0001){
+      var left = avail / perDay;
+      $("ovDay").textContent = (left > 999 ? "999+" : Math.floor(left)) + " 天";
+      $("ovDaySub").textContent = "日均 ¥" + money4(perDay);
+    }else{
+      $("ovDay").textContent = "—";
+      $("ovDaySub").textContent = "区间内无消费";
+    }
+  }
+
+  /* ---------- 图表 ---------- */
+  function setupCanvas(cv){
+    var dpr = window.devicePixelRatio || 1;
+    var rect = cv.getBoundingClientRect();
+    var w = Math.round(cv.clientWidth || rect.width || 0);
+    // 基准高度只读一次并缓存：赋值 cv.height 会改写 height 属性，
+    // 若每次都从属性读，画布会越画越高。
+    if(!cv.__baseH) cv.__baseH = parseInt(cv.getAttribute("height"), 10) || 200;
+    var h = cv.__baseH;
+    if(!w || w < 40) return null;   // 尚未完成布局，稍后重试
+    cv.width = w * dpr;
+    cv.height = h * dpr;
+    cv.style.height = h + "px";
+    var ctx = cv.getContext("2d");
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return {ctx:ctx, w:w, h:h};
+  }
+
+  function drawStacked(cv, cats, stacks, opt){
+    opt = opt || {};
+    var g = setupCanvas(cv);
+    if(!g){ scheduleRepaint(cv); return null; }
+    var ctx = g.ctx, W = g.w, H = g.h;
+    var padL = 42, padR = 8, padT = 12, padB = 24;
+    var cw = W - padL - padR, chh = H - padT - padB;
+
+    ctx.clearRect(0, 0, W, H);
+    cats = cats || [];
+    if(!cats.length){
+      ctx.fillStyle = "#5f6875"; ctx.font = "13px -apple-system,sans-serif"; ctx.textAlign = "center";
+      ctx.fillText("暂无数据", W/2, H/2+6);
+      return null;
+    }
+
+    var totals = cats.map(function(_, i){
+      return stacks.reduce(function(a, s){ return a + (s.values[i] || 0); }, 0);
+    });
+    var max = Math.max.apply(null, totals.concat([opt.minMax || 0])) || 1;
+
+    // 刻度取整
+    var step = niceStep(max / 4);
+    var top = step * 4;
+
+    var n = cats.length;
+    var slot = cw / n;
+    var bw = Math.max(2, Math.min(26, slot * 0.62));
+
+    // 网格
+    ctx.strokeStyle = "rgba(255,255,255,.06)";
+    ctx.lineWidth = 1;
+    ctx.fillStyle = "#5f6875";
+    ctx.font = "10px -apple-system,sans-serif";
+    ctx.textAlign = "right";
+    for(var k = 0; k <= 4; k++){
+      var y = padT + chh - (k / 4) * chh;
+      ctx.beginPath();
+      ctx.moveTo(padL, y);
+      ctx.lineTo(W - padR, y);
+      ctx.stroke();
+      ctx.fillText(opt.fmt ? opt.fmt(top * k / 4) : (top * k / 4).toFixed(0), padL - 6, y + 3);
+    }
+
+    // 柱
+    var bars = [];
+    for(var i = 0; i < n; i++){
+      var x0 = padL + slot * i + (slot - bw) / 2;
+      var acc = 0;
+      for(var si = 0; si < stacks.length; si++){
+        var v = stacks[si].values[i] || 0;
+        if(v <= 0) continue;
+        var hgt = (v / (top || 1)) * chh;
+        var yTop = padT + chh - acc - hgt;
+        ctx.fillStyle = stacks[si].color;
+        roundRect(ctx, x0, yTop, bw, hgt, Math.min(3, hgt / 2, bw / 2));
+        acc += hgt;
+      }
+      bars.push({x0:x0, w:bw, total:totals[i], i:i});
+    }
+
+    // X 轴标签
+    ctx.fillStyle = "#5f6875";
+    ctx.textAlign = "center";
+    ctx.font = "10px -apple-system,sans-serif";
+    var every = n <= 8 ? 1 : (n <= 15 ? 2 : Math.ceil(n / 8));
+    for(var i2 = 0; i2 < n; i2++){
+      if(i2 % every !== 0 && i2 !== n - 1) continue;
+      var cx = padL + slot * i2 + slot / 2;
+      ctx.fillText(mdStr(cats[i2]), cx, H - 7);
+    }
+    return {bars:bars, padL:padL, slot:slot, W:W};
+  }
+
+  var MODEL_COLORS = ["#ff6900", "#ffa41b", "#ffcd6b", "#7bd88f", "#5aa9ff", "#c07bff", "#5c6472"];
+
+  function modelSeries(metric){
+    var cats = (aggCurrent && aggCurrent.cats) || [];
+    if(!cats.length) return [];
+    var idx = {};
+    cats.forEach(function(d, i){ idx[d] = i; });
+    var map = {};
+    state.usage.forEach(function(r){
+      if(r.resource_type !== "model") return;
+      var nm = r.name || "未命名模型";
+      var i = idx[r.date];
+      if(i === undefined) return;
+      if(!map[nm]) map[nm] = {name: nm, values: cats.map(function(){ return 0; }), total: 0};
+      var v = metric === "tok" ? (Number(r.total_tokens) || 0) : num(r.consumed_amount);
+      map[nm].values[i] += v;
+      map[nm].total += v;
+    });
+    var list = Object.keys(map).map(function(k){ return map[k]; })
+      .sort(function(a, b){ return b.total - a.total; });
+    return list.slice(0, 6);
+  }
+
+  function drawMulti(cv, cats, series, opt){
+    opt = opt || {};
+    var g = setupCanvas(cv);
+    if(!g){ scheduleRepaint(cv); return; }
+    var ctx = g.ctx, W = g.w, H = g.h;
+    var padL = 42, padR = opt.padR || 14, padT = 12, padB = 24;
+    var cw = W - padL - padR, chh = H - padT - padB;
+
+    ctx.clearRect(0, 0, W, H);
+    if(!cats.length || !series.length){
+      ctx.fillStyle = "#5f6875";
+      ctx.font = "13px -apple-system,sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(series.length ? "暂无数据" : "已全部隐藏，点图例可恢复", W / 2, H / 2 + 6);
+      return;
+    }
+
+    var max = 0;
+    series.forEach(function(s){ s.values.forEach(function(v){ if(v > max) max = v; }); });
+    if(max <= 0) max = 1;
+    var step = niceStep(max / 4);
+    var top = step * 4;
+
+    ctx.strokeStyle = "rgba(255,255,255,.06)";
+    ctx.lineWidth = 1;
+    ctx.fillStyle = "#5f6875";
+    ctx.font = "10px -apple-system,sans-serif";
+    ctx.textAlign = "right";
+    for(var k = 0; k <= 4; k++){
+      var y = padT + chh - (k / 4) * chh;
+      ctx.beginPath();
+      ctx.moveTo(padL, y);
+      ctx.lineTo(W - padR, y);
+      ctx.stroke();
+      ctx.fillText(opt.fmt ? opt.fmt(top * k / 4) : String(Math.round(top * k / 4)), padL - 6, y + 3);
+    }
+
+    var n = cats.length;
+    var slot = n > 1 ? cw / (n - 1) : cw;
+    series.forEach(function(s){
+      ctx.beginPath();
+      ctx.strokeStyle = s.color;
+      ctx.lineWidth = 2;
+      for(var i = 0; i < n; i++){
+        var x = padL + (n > 1 ? slot * i : cw / 2);
+        var yy = padT + chh - (s.values[i] / top) * chh;
+        if(i === 0) ctx.moveTo(x, yy); else ctx.lineTo(x, yy);
+      }
+      ctx.stroke();
+      // 末点
+      var lx = padL + (n > 1 ? slot * (n - 1) : cw / 2);
+      var ly = padT + chh - (s.values[n - 1] / top) * chh;
+      ctx.fillStyle = s.color;
+      ctx.beginPath();
+      ctx.arc(lx, ly, 2.6, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    ctx.fillStyle = "#5f6875";
+    ctx.textAlign = "center";
+    ctx.font = "10px -apple-system,sans-serif";
+    var every = n <= 8 ? 1 : (n <= 15 ? 2 : Math.ceil(n / 8));
+    for(var j = 0; j < n; j++){
+      if(j % every !== 0 && j !== n - 1) continue;
+      var cx = padL + (n > 1 ? slot * j : cw / 2);
+      ctx.fillText(mdStr(cats[j]), cx, H - 7);
+    }
+  }
+
+  function renderModelCompare(){
+    var cats = (aggCurrent && aggCurrent.cats) || [];
+    var all = modelSeries(state.metric).slice(0, 6);
+    all.forEach(function(s, i){ s.color = MODEL_COLORS[i % MODEL_COLORS.length]; });
+
+    var shown = all.filter(function(s){ return !state.multiHidden[s.name]; });
+
+    var legend = $("multiLegend");
+    if(legend){
+      legend.innerHTML = all.length ? all.map(function(s){
+        var off = state.multiHidden[s.name] ? ' style="opacity:.38"' : "";
+        return '<span data-name="' + esc(s.name) + '"' + off + '><i class="dot" style="background:' + s.color + '"></i>'
+          + esc(s.name) + '</span>';
+      }).join("") : '<span style="color:#5f6875">区间内没有模型数据</span>';
+    }
+    drawMulti($("chMulti"), cats, shown, {
+      fmt: state.metric === "tok"
+        ? function(v){ return tok(v); }
+        : function(v){ return v >= 1 ? v.toFixed(0) : v.toFixed(2); }
+    });
+  }
+
+  var repaintTimer = null;
+  function scheduleRepaint(cv){
+    if(repaintTimer) return;
+    repaintTimer = setTimeout(function(){
+      repaintTimer = null;
+      if(aggCurrent){ renderTrend(aggCurrent); renderModelCompare(); }
+    }, 260);
+  }
+
+  function roundRect(ctx, x, y, w, h, r){
+    r = Math.max(0, Math.min(r, w/2, h/2));
+    ctx.beginPath();
+    ctx.moveTo(x+r, y);
+    ctx.lineTo(x+w-r, y);
+    ctx.arcTo(x+w, y, x+w, y+r, r);
+    ctx.lineTo(x+w, y+h-r);
+    ctx.arcTo(x+w, y+h, x+w-r, y+h, r);
+    ctx.lineTo(x+r, y+h);
+    ctx.arcTo(x, y+h, x, y+h-r, r);
+    ctx.lineTo(x, y+r);
+    ctx.arcTo(x, y, x+r, y, r);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  function niceStep(raw){
+    if(raw <= 0) return 1;
+    var p = Math.pow(10, Math.floor(Math.log10(raw)));
+    var m = raw / p;
+    var f = m <= 1 ? 1 : m <= 2 ? 2 : m <= 5 ? 5 : 10;
+    return f * p;
+  }
+
+  /* ---------- 渲染：趋势 ---------- */
+  var chartMeta = {spend:null, tok:null};
+
+  function renderTrend(agg){
+    var cats = agg.cats;
+    var spendStacks = [
+      {label:"未命中输入", color:"#ff6900", values:cats.map(function(d){ return agg.byDay[d].miss; })},
+      {label:"命中缓存",   color:"#ffa41b", values:cats.map(function(d){ return agg.byDay[d].hit; })},
+      {label:"输出",       color:"#ffcd6b", values:cats.map(function(d){ return agg.byDay[d].out; })},
+      {label:"插件",       color:"#5c6472", values:cats.map(function(d){ return agg.byDay[d].plugin; })}
+    ];
+    chartMeta.spend = drawStacked($("chSpend"), cats, spendStacks, {
+      fmt:function(v){ return v >= 1 ? v.toFixed(0) : v.toFixed(2); }
+    });
+
+    var tokStacks = [
+      {label:"未命中", color:"#ff6900", values:cats.map(function(d){ return agg.byDay[d].missT; })},
+      {label:"命中",   color:"#ffa41b", values:cats.map(function(d){ return agg.byDay[d].hitT; })},
+      {label:"输出",   color:"#ffcd6b", values:cats.map(function(d){ return agg.byDay[d].outT; })}
+    ];
+    chartMeta.tok = drawStacked($("chTok"), cats, tokStacks, {
+      fmt:function(v){ return tok(v); }
+    });
+
+    var sum = spendStacks.reduce(function(a, s){ return a + s.values.reduce(function(x,y){return x+y;},0); }, 0);
+    $("trendSum").textContent = "合计 ¥" + money4(sum);
+    var sumT = tokStacks.reduce(function(a, s){ return a + s.values.reduce(function(x,y){return x+y;},0); }, 0);
+    $("trendTok").textContent = "合计 " + tok(sumT) + " tokens";
+  }
+
+  function bindTip(cv, tipEl, metaKey){
+    function move(ev){
+      var meta = chartMeta[metaKey];
+      var cats = (aggCurrent && aggCurrent.cats) || [];
+      if(!meta) return;
+      var rect = cv.getBoundingClientRect();
+      var cx = (ev.touches ? ev.touches[0].clientX : ev.clientX) - rect.left;
+      var idx = Math.floor((cx - meta.padL) / meta.slot);
+      if(idx < 0 || idx >= cats.length){
+        tipEl.style.opacity = 0; return;
+      }
+      var day = aggCurrent.byDay[cats[idx]];
+      if(!day){ tipEl.style.opacity = 0; return; }
+      var rows = [
+        "<b>" + cats[idx] + "</b>",
+        "消费 ¥" + money4(day.amt),
+        "请求 " + day.req + " 次",
+        "Token " + tok(day.tok)
+      ];
+      tipEl.innerHTML = rows.join("<br>");
+      tipEl.style.opacity = 1;
+      var tipW = tipEl.offsetWidth;
+      var left = Math.min(Math.max(4, cx - tipW / 2), cv.clientWidth - tipW - 4);
+      tipEl.style.left = left + "px";
+      tipEl.style.top = "8px";
+    }
+    cv.addEventListener("mousemove", move);
+    cv.addEventListener("touchstart", move, {passive:true});
+    cv.addEventListener("touchmove", move, {passive:true});
+    cv.addEventListener("mouseleave", function(){ tipEl.style.opacity = 0; });
+    cv.addEventListener("touchend", function(){ tipEl.style.opacity = 0; });
+  }
+
+  /* ---------- 渲染：模型 ---------- */
+  function typeTag(m){
+    if(m.isPlugin) return '<span class="tag plugin">插件</span>';
+    if(m.type === "batch") return '<span class="tag batch">批量</span>';
+    return "";
+  }
+
+  function renderModel(agg){
+    var list = Object.keys(agg.byModel).map(function(k){ return agg.byModel[k]; })
+      .sort(function(a,b){ return b.amt - a.amt; });
+    var tb = $("tblModel").querySelector("tbody");
+    if(!list.length){
+      tb.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#5f6875;padding:24px 0">暂无用量数据</td></tr>';
+      $("modelCount").textContent = "—";
+    }else{
+      tb.innerHTML = list.map(function(m){
+        var rate = (m.hitT + m.missT) > 0 ? pct(m.hitT, m.hitT + m.missT) : "—";
+        return '<tr>'
+          + '<td><span class="name">' + esc(m.name) + typeTag(m) + '</span>'
+          + '<span class="sub">' + (m.tok ? "缓存命中 " + tok(m.hitT) : "") + '</span></td>'
+          + '<td class="num">¥' + money4(m.amt) + '</td>'
+          + '<td class="num">' + m.req + '</td>'
+          + '<td class="num">' + (m.tok ? tok(m.tok) : "—") + '</td>'
+          + '<td class="num">' + rate + '</td>'
+          + '</tr>';
+      }).join("");
+      $("modelCount").textContent = list.length + " 项";
+    }
+
+    var keys = Object.keys(agg.byKey).map(function(k){ return agg.byKey[k]; })
+      .sort(function(a,b){ return b.amt - a.amt; });
+    var kb = $("tblKey").querySelector("tbody");
+    var totalAmt = agg.total.amt || 1;
+    if(!keys.length){
+      kb.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#5f6875;padding:24px 0">暂无数据</td></tr>';
+    }else{
+      kb.innerHTML = keys.map(function(k){
+        return '<tr>'
+          + '<td><span class="keytag">' + esc(k.k) + '</span></td>'
+          + '<td class="num">¥' + money4(k.amt) + '</td>'
+          + '<td class="num">' + k.req + '</td>'
+          + '<td class="num">' + pct(k.amt, totalAmt) + '</td>'
+          + '</tr>';
+      }).join("");
+    }
+  }
+
+  /* ---------- 渲染：明细 ---------- */
+  function renderDetail(){
+    var rows = state.usage.slice().sort(function(a,b){
+      if(a.date !== b.date) return a.date < b.date ? 1 : -1;
+      return num(b.consumed_amount) - num(a.consumed_amount);
+    });
+    var tb = $("tblDetail").querySelector("tbody");
+    if(!rows.length){
+      tb.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#5f6875;padding:24px 0">暂无记录</td></tr>';
+      $("detailCount").textContent = "—";
+      return;
+    }
+    tb.innerHTML = rows.map(function(r){
+      var tag = r.resource_type === "plugin"
+        ? '<span class="tag plugin">插件</span>'
+        : (r.inference_type === "batch" ? '<span class="tag batch">批量</span>' : "");
+      return '<tr>'
+        + '<td><span class="name">' + esc(r.name) + tag + '</span>'
+        + '<span class="sub">' + esc(r.date) + ' · ' + '<span class="keytag">' + esc(r.masked_api_key || "—") + '</span></span></td>'
+        + '<td class="num">¥' + money4(num(r.consumed_amount)) + '</td>'
+        + '<td class="num">' + (Number(r.request_count) || 0) + '</td>'
+        + '<td class="num">' + (r.total_tokens ? tok(r.total_tokens) : "—") + '</td>'
+        + '</tr>';
+    }).join("");
+    $("detailCount").textContent = rows.length + " 条";
+  }
+
+  /* ---------- 渲染：账单 ---------- */
+  function renderBill(){
+    var rows = state.bills || [];
+    var tb = $("tblBill").querySelector("tbody");
+    var sum = {o:0, d:0, g:0, p:0};
+    rows.forEach(function(r){
+      sum.o += num(r.original_amount);
+      sum.d += num(r.discount_amount);
+      sum.g += num(r.gift_amount);
+      sum.p += num(r.final_paid_amount);
+    });
+    $("billOri").textContent = "¥" + money(sum.o);
+    $("billDis").textContent = "¥" + money(sum.d);
+    $("billGift").textContent = "¥" + money(sum.g);
+    $("billPaid").textContent = "¥" + money(sum.p);
+    $("billDays").textContent = rows.length ? rows.length + " 天" : "—";
+
+    if(!rows.length){
+      tb.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#5f6875;padding:24px 0">暂无账单数据</td></tr>';
+      return;
+    }
+    tb.innerHTML = rows.map(function(r){
+      return '<tr>'
+        + '<td><span class="name">' + esc(r.date) + '</span><span class="sub">' + esc(r.currency || "") + '</span></td>'
+        + '<td class="num">' + money(num(r.original_amount)) + '</td>'
+        + '<td class="num">-' + money(num(r.discount_amount)) + '</td>'
+        + '<td class="num">-' + money(num(r.gift_amount)) + '</td>'
+        + '<td class="num" style="color:#ffb347;font-weight:600">' + money(num(r.final_paid_amount)) + '</td>'
+        + '</tr>';
+    }).join("");
+  }
+
+  /* ---------- 汇总渲染 ---------- */
+  var aggCurrent = null;
+
+  var LS_H = "mimo.history.v1";
+
+  function balTotal(){
+    var b = state.balance && state.balance.balance_infos && state.balance.balance_infos[0];
+    for(var i = 0; state.balance && state.balance.balance_infos && i < state.balance.balance_infos.length; i++){
+      if(String(state.balance.balance_infos[i].currency).toUpperCase() === "CNY") b = state.balance.balance_infos[i];
+    }
+    return b ? num(b.total_available) : 0;
+  }
+
+  function historyLoad(){
+    try{ return JSON.parse(localStorage.getItem(LS_H) || "{}"); }catch(e){ return {}; }
+  }
+  function historySave(h){
+    try{ localStorage.setItem(LS_H, JSON.stringify(h)); }catch(e){}
+  }
+  function historyRecord(agg){
+    if(state.demo) return;
+    var h = historyLoad();
+    agg.cats.forEach(function(d){
+      var day = agg.byDay[d];
+      if(!day || day.amt <= 0) return;
+      h[d] = {amt: day.amt, req: day.req, tok: day.tok};
+    });
+    var keys = Object.keys(h).sort();
+    while(keys.length > 200){ delete h[keys.shift()]; }
+    historySave(h);
+  }
+  function fmtDate(x){
+    var m = x.getMonth() + 1, d = x.getDate();
+    return x.getFullYear() + "-" + (m < 10 ? "0" + m : m) + "-" + (d < 10 ? "0" + d : d);
+  }
+
+  function renderInsights(agg){
+    var t = agg.total;
+    var hitT = t.hit || 0, missT = t.miss || 0;
+    $("cacheRate").textContent = (hitT + missT) > 0 ? pct(hitT, hitT + missT) : "—";
+
+    var missAmt = 0, save = 0, worst = null;
+    Object.keys(agg.byModel).forEach(function(k){
+      var m = agg.byModel[k];
+      if(m.isPlugin) return;
+      missAmt += (m.missAmt || 0);
+      if(!m.missT || !m.missAmt) return;
+      var pHit = m.hitT > 0 ? (m.hitAmt || 0) / m.hitT : 0;
+      var pMiss = m.missAmt / m.missT;
+      if(pHit <= 0 || pMiss <= pHit) return;
+      var s = (pMiss - pHit) * m.missT;
+      save += s;
+      if(!worst || s > worst.s) worst = {name: m.name, s: s};
+    });
+
+    $("cacheMissAmt").textContent = "¥" + money4(missAmt);
+    $("cacheSave").textContent = "¥" + money4(save);
+    if(missAmt <= 0){
+      $("cacheTip").textContent = "区间内没有未命中缓存的输入，已经是满命中。";
+    }else{
+      var ratio = missAmt > 0 ? save / missAmt : 0;
+      $("cacheTip").textContent = "单价按本区间实际扣费反推。未命中部分若全部命中，约可省 ¥"
+        + money4(save) + "（未命中花费的 " + Math.round(ratio * 100) + "%）"
+        + (worst ? "；最值得优化：" + worst.name + "（¥" + money4(worst.s) + "）" : "");
+    }
+
+    var h = historyLoad();
+    var curDay = state.range.end;
+    var past = Object.keys(h).filter(function(d){ return d < curDay; }).sort().slice(-7);
+    var avg = 0, used = past.length;
+    if(used > 0){
+      avg = past.reduce(function(a, d){ return a + (h[d].amt || 0); }, 0) / used;
+    }else{
+      avg = state.days > 0 ? t.amt / state.days : 0;
+      used = 0;
+    }
+    var avail = balTotal();
+    if(avg > 0.0001 && avail > 0){
+      var left = Math.floor(avail / avg);
+      if(left < 1){
+        $("fcDays").textContent = "不足 1 天";
+        $("fcAvg").textContent = "¥" + money4(avg);
+        $("fcDate").textContent = fmtDate(new Date());
+        $("fcTip").textContent = "按历史日均 "+ "¥" + money4(avg) + " 推算，当前余额已不够一天用量。";
+        return;
+      }
+      var end = new Date();
+      end.setDate(end.getDate() + left);
+      $("fcDays").textContent = left + " 天";
+      $("fcAvg").textContent = "¥" + money4(avg);
+      $("fcDate").textContent = fmtDate(end);
+      $("fcTip").textContent = used > 0
+        ? "按本机记录的最近 " + used + " 天日均推算，仅供参考；记录越多越准。"
+        : "还没有历史记录，先用当前区间均值推算；多同步几天会自动改用历史日均。";
+    }else{
+      $("fcDays").textContent = "—";
+      $("fcAvg").textContent = avg > 0 ? "¥" + money4(avg) : "—";
+      $("fcDate").textContent = "—";
+      $("fcTip").textContent = "余额或消费数据不足，暂无法推算。";
+    }
+  }
+
+  function urlish(u){
+    if(!u) return "—";
+    return String(u).replace(/^https?:\/\//, "").split("/")[0];
+  }
+
+  function renderAccBar(){
+    var bar = $("accBar");
+    if(!bar) return;
+    var html = state.accounts.map(function(a, i){
+      return '<div class="accchip' + (i === state.accIdx ? " on" : "") + '" data-i="' + i + '">'
+        + '<i></i>' + esc(a.name || brandOf(a).label) + '</div>';
+    }).join("");
+    html += '<div class="accchip add" id="accAdd">+ 添加</div>';
+    bar.innerHTML = html;
+  }
+
+  function applyBrandUI(){
+    var useU = hasUsage();
+    var a = acc();
+    var note = $("noUsageNote");
+    if(note) note.style.display = useU ? "none" : "";
+    var noteText = $("noUsageText");
+    if(noteText && !useU){
+      noteText.innerHTML = "该供应商只提供余额接口，用量和账单按<b>余额快照推算</b>：每次打开面板会记录一次余额，两点之间的消耗计入后一天。" +
+        "打开得越勤，曲线越准；充值当天记为 0。";
+    }
+    var ln = $("trendLegend"), tn = $("trendNote");
+    if(ln){
+      ln.innerHTML = useU
+        ? '<span><i class="dot" style="background:#ff6900"></i>输入 · 未命中</span><span><i class="dot" style="background:#ffa41b"></i>输入 · 命中</span><span><i class="dot" style="background:#ffcd6b"></i>输出</span><span><i class="dot" style="background:#5c6472"></i>插件</span>'
+        : '<span><i class="dot" style="background:#ffcd6b"></i>推算消费</span>';
+    }
+    if(tn) tn.style.display = useU ? "none" : "";
+    var B = brandOf(a);
+    var logo = document.querySelector("header .logo");
+    if(logo){
+      var shortMap = {mimo:"Mi", deepseek:"DS", moonshot:"Ki", sf:"SF", or:"OR", custom:"自定"};
+      logo.textContent = shortMap[(a && a.brand) || "mimo"] || "Mi";
+    }
+    var h1 = document.querySelector("header h1");
+    if(h1) h1.textContent = (a && a.brand === "mimo") ? "MiMo 用量面板" : (B.label + " 余额面板");
+    var sub = $("subLine");
+    if(sub) sub.textContent = useU ? "平台余额 · 模型用量 · 日账单" : "账户余额 · 多供应商";
+    var fs = $("footSrc");
+    if(fs){
+      var u = (a && a.brand === "custom") ? (a.url || "自定义接口") : B.url;
+      try{ fs.textContent = urlish(u); }catch(e){ fs.textContent = u; }
+    }
+    setTab(state.tab || "trend");
+  }
+
+  function switchAcc(i){
+    if(i < 0 || i >= state.accounts.length) return;
+    state.accIdx = i;
+    var a = acc();
+    state.key = a ? a.key : "";
+    state.balance = null;
+    state.usage = [];
+    state.bills = [];
+    renderAccBar();
+    applyBrandUI();
+    saveCfg();
+    sync(true);
+  }
+
+  function applyConfig(){
+    if(NATIVE && window.MimoNative && typeof window.MimoNative.setConfig === "function"){
+      // 后台预警/桌面小组件只支持 MiMo 用量口径，切到其他厂商时不写入 Key，避免展示错号数据
+      var nativeKey = hasUsage() ? (state.key || "") : "";
+      try{ window.MimoNative.setConfig(nativeKey, state.alert || 0, !!state.push, state.pushEvery || 6); }catch(e){}
+    }
+  }
+
+  function renderAll(){
+    renderAccBar();
+    applyBrandUI();
+    renderBalance();
+    aggCurrent = aggUsage();
+    renderOverview(aggCurrent);
+    renderTrend(aggCurrent);
+    renderModel(aggCurrent);
+    renderModelCompare();
+    renderInsights(aggCurrent);
+    historyRecord(aggCurrent);
+    renderDetail();
+    renderBill();
+
+    if(state.lastSync){
+      var t = state.lastSync;
+      var hh = String(t.getHours()).padStart(2,"0");
+      var mm = String(t.getMinutes()).padStart(2,"0");
+      var ss = String(t.getSeconds()).padStart(2,"0");
+      $("syncLine").textContent = "已同步 " + hh + ":" + mm + ":" + ss + "（本地时间）" + (state.demo ? " · 演示数据" : "");
+    }else{
+      $("syncLine").textContent = "尚未同步";
+    }
+  }
+
+  /* ---------- Tab ---------- */
+  function setTab(name){
+    state.tab = name;
+    ["trend","model","detail","bill"].forEach(function(k){
+      $("view-" + k).style.display = (k === name) ? "" : "none";
+    });
+    Array.prototype.forEach.call($("tabs").children, function(b){
+      b.classList.toggle("on", b.getAttribute("data-tab") === name);
+    });
+    if(name === "bill") ensureBills();
+    if(name === "model" && aggCurrent){
+      var agg2 = aggCurrent;
+      requestAnimationFrame(function(){ renderModel(agg2); renderModelCompare(); });
+    }
+    if(name === "trend" && aggCurrent){
+      var agg = aggCurrent;
+      requestAnimationFrame(function(){ renderTrend(agg); });
+    }
+  }
+
+  /* ---------- 设置抽屉 ---------- */
+  function fillBrandSelect(){
+    var sel = $("inBrand");
+    if(!sel) return;
+    if(!sel.children.length){
+      sel.innerHTML = Object.keys(BRANDS).map(function(k){
+        return '<option value="' + k + '">' + BRANDS[k].label + '</option>';
+      }).join("");
+    }
+  }
+
+  function toggleCustomBox(){
+    var box = $("customBox");
+    if(!box) return;
+    box.style.display = ($("inBrand").value === "custom") ? "" : "none";
+  }
+
+  function fillAccFields(){
+    var a = acc();
+    fillBrandSelect();
+    $("inBrand").value = (a && a.brand) || "mimo";
+    $("inAccName").value = (a && a.name) || "";
+    if($("inCustomUrl")) $("inCustomUrl").value = (a && a.url) || "";
+    if($("inCustomPath")) $("inCustomPath").value = (a && a.path) || "";
+    toggleCustomBox();
+  }
+
+  function openDrawer(){
+    fillAccFields();
+    $("inKey").value = state.key;
+    if($("inProxy")) $("inProxy").value = state.proxy;
+    $("inAlert").value = state.alert || "";
+    $("inAuto").value = String(state.autoSec || 0);
+    if($("inPad")) $("inPad").value = String(state.pad);
+    setTg("tgPush", state.push);
+    if($("inPushEvery")) $("inPushEvery").value = String(state.pushEvery);
+    showDiag();
+    setTg("tgDemo", state.demo);
+    setTg("tgSave", state.saveKey);
+    $("mask").classList.add("on");
+    $("drawer").classList.add("on");
+    setTimeout(showDiag, 60);
+  }
+  function closeDrawer(){
+    $("mask").classList.remove("on");
+    $("drawer").classList.remove("on");
+  }
+  function setTg(id, on){ $(id).classList.toggle("on", !!on); }
+
+  var WORKER_CODE = [
+    "// 部署到 Cloudflare Workers，然后把地址填进「代理地址」",
+    "const UPSTREAM = 'https://api.xiaomimimo.com';",
+    "const CORS = {",
+    "  'Access-Control-Allow-Origin': '*',",
+    "  'Access-Control-Allow-Headers': 'Authorization,api-key,Content-Type',",
+    "  'Access-Control-Allow-Methods': 'GET,OPTIONS'",
+    "};",
+    "export default {",
+    "  async fetch(req) {",
+    "    if (req.method === 'OPTIONS') return new Response(null, { headers: CORS });",
+    "    const u = new URL(req.url);",
+    "    const target = UPSTREAM + u.pathname + u.search;",
+    "    const res = await fetch(target, {",
+    "      headers: {",
+    "        'Authorization': req.headers.get('Authorization') || '',",
+    "        'api-key': req.headers.get('api-key') || ''",
+    "      }",
+    "    });",
+    "    const body = await res.text();",
+    "    return new Response(body, {",
+    "      status: res.status,",
+    "      headers: { ...CORS, 'Content-Type': 'application/json' }",
+    "    });",
+    "  }",
+    "};"
+  ].join("\n");
+
+  /* ---------- 定时刷新 ---------- */
+  function armTimer(){
+    if(state.timer){ clearInterval(state.timer); state.timer = null; }
+    if(state.autoSec > 0 && (state.key || state.demo)){
+      state.timer = setInterval(function(){
+        if(document.hidden) return;
+        sync();
+      }, state.autoSec * 1000);
+    }
+  }
+
+  /* ---------- 事件绑定 ---------- */
+  function bind(){
+    $("btnRefresh").addEventListener("click", function(){ sync(); });
+    $("btnSet").addEventListener("click", openDrawer);
+    $("mask").addEventListener("click", closeDrawer);
+
+    function toast(msg){
+      var t = $("toast");
+      t.textContent = msg;
+      t.classList.add("on");
+      clearTimeout(toast._t);
+      toast._t = setTimeout(function(){ t.classList.remove("on"); }, 1800);
+    }
+
+    function cleanKey(raw){
+      var k = String(raw || "").replace(/[\r\n\t ]+/g, "").replace(/^["']|["']$/g, "");
+      k = k.replace(/^Bearer/i, "");
+      return k;
+    }
+
+    function applyPaste(raw){
+      var k = cleanKey(raw);
+      if(!k){
+        toast("剪贴板里没有可用文本");
+        return;
+      }
+      var input = $("inKey");
+      input.value = k;
+      if(input.type === "password") input.type = "text";
+      $("btnEye").textContent = "隐藏";
+      if(k.indexOf("sk-") === 0){
+        toast("已粘贴 API Key");
+      }else if(k.indexOf("tp-") === 0){
+        toast("这是 Token Plan 的 tp- Key，账务接口需 sk- Key");
+      }else{
+        toast("已粘贴，但不像 sk- 开头的 Key");
+      }
+    }
+
+    function nativeClipboard(){
+      if(NATIVE && window.MimoNative && typeof window.MimoNative.clipboard === "function"){
+        try{ return window.MimoNative.clipboard(); }catch(e){ return ""; }
+      }
+      return "";
+    }
+
+    $("btnPaste").addEventListener("click", function(){
+      var raw = nativeClipboard();
+      if(raw && cleanKey(raw)){ applyPaste(raw); return; }
+
+      if(navigator.clipboard && navigator.clipboard.readText){
+        navigator.clipboard.readText().then(function(txt){
+          if(cleanKey(txt)) applyPaste(txt);
+          else toast("剪贴板为空，长按输入框选「粘贴」");
+        }).catch(function(){
+          toast("请长按输入框，选择「粘贴」");
+        });
+      }else{
+        toast("请长按输入框，选择「粘贴」");
+      }
+    });
+
+    $("btnEye").addEventListener("click", function(){
+      var i = $("inKey");
+      var isPw = i.type === "password";
+      i.type = isPw ? "text" : "password";
+      this.textContent = isPw ? "隐藏" : "显示";
+    });
+
+    if($("btnWorker")){
+      $("btnWorker").addEventListener("click", function(){
+        $("workerCode").textContent = WORKER_CODE;
+        $("workerBox").classList.toggle("on");
+      });
+      $("btnCopy").addEventListener("click", function(){
+        var txt = WORKER_CODE;
+        if(navigator.clipboard && navigator.clipboard.writeText){
+          navigator.clipboard.writeText(txt).then(function(){ $("btnCopy").textContent = "已复制"; });
+        }else{
+          var ta = document.createElement("textarea");
+          ta.value = txt; document.body.appendChild(ta); ta.select();
+          try{ document.execCommand("copy"); $("btnCopy").textContent = "已复制"; }catch(e){}
+          document.body.removeChild(ta);
+        }
+        setTimeout(function(){ $("btnCopy").textContent = "复制"; }, 1600);
+      });
+    }
+
+    $("tgDemo").addEventListener("click", function(){
+      state.demo = !state.demo;
+      setTg("tgDemo", state.demo);
+    });
+    var tgPushEl = $("tgPush");
+    if(tgPushEl){
+      tgPushEl.addEventListener("click", function(){
+        state.push = !state.push;
+        setTg("tgPush", state.push);
+        if(state.push && NATIVE && window.MimoNative && window.MimoNative.requestNotifyPermission){
+          try{ window.MimoNative.requestNotifyPermission(); }catch(e){}
+        }
+      });
+    }
+
+    $("tgSave").addEventListener("click", function(){
+      state.saveKey = !state.saveKey;
+      setTg("tgSave", state.saveKey);
+    });
+
+    $("inBrand").addEventListener("change", function(){
+      toggleCustomBox();
+      if(!$("inAccName").value.trim()) $("inAccName").value = BRANDS[$("inBrand").value].label;
+    });
+
+    $("btnAddAcc").addEventListener("click", function(){
+      state.accounts.push({
+        name: "账号 " + (state.accounts.length + 1),
+        brand: "mimo", key: "", url: "", path: "", currency: "CNY"
+      });
+      state.accIdx = state.accounts.length - 1;
+      state.key = "";
+      fillAccFields();
+      $("inKey").value = "";
+      renderAccBar();
+    });
+
+    $("btnDelAcc").addEventListener("click", function(){
+      if(state.accounts.length <= 1){
+        state.accounts = [];
+        state.accIdx = 0;
+        state.key = "";
+        // 允许清空后再新建
+      }else{
+        state.accounts.splice(state.accIdx, 1);
+        if(state.accIdx >= state.accounts.length) state.accIdx = state.accounts.length - 1;
+        state.key = acc() ? acc().key : "";
+      }
+      fillAccFields();
+      $("inKey").value = state.key;
+      renderAccBar();
+      saveCfg();
+      sync(true);
+    });
+
+    $("btnSave").addEventListener("click", function(){
+      state.key = $("inKey").value.trim();
+
+      var bk = $("inBrand") ? $("inBrand").value : "mimo";
+      var nm = $("inAccName") ? $("inAccName").value.trim() : "";
+      var cu = $("inCustomUrl") ? $("inCustomUrl").value.trim() : "";
+      var cp = $("inCustomPath") ? $("inCustomPath").value.trim() : "";
+      if(!state.accounts.length){
+        state.accounts.push({name: nm || BRANDS[bk].label, brand: bk, key: state.key, url: cu, path: cp, currency: "CNY"});
+        state.accIdx = 0;
+      }else{
+        var a0 = acc();
+        a0.name = nm || BRANDS[bk].label;
+        a0.brand = bk;
+        a0.key = state.key;
+        a0.url = cu;
+        a0.path = cp;
+        a0.currency = "CNY";
+      }
+      if($("inProxy")) state.proxy = $("inProxy").value.trim().replace(/\/+$/,"");
+      state.alert = Number($("inAlert").value) || 0;
+      state.autoSec = Number($("inAuto").value) || 0;
+      if(state.autoSec > 0 && state.autoSec < 60) state.autoSec = 60;
+      if($("inPad")){
+        var pad = parseInt($("inPad").value, 10);
+        state.pad = isNaN(pad) ? -1 : pad;
+        applyPad();
+      }
+      state.push = $("tgPush").classList.contains("on");
+      state.pushEvery = Number($("inPushEvery").value) || 6;
+      saveCfg();
+      applyConfig();
+      if(state.push && NATIVE && window.MimoNative && window.MimoNative.requestNotifyPermission){
+        try{ window.MimoNative.requestNotifyPermission(); }catch(e){}
+      }
+      closeDrawer();
+      hideBanner();
+      if(!state.demo && !state.key){
+        clearData();
+        showBanner("info", "没有填写 API Key。可以填入 Key 读取真实数据，或打开「演示数据」预览界面。");
+        return;
+      }
+      if(!state.demo && !hasUsage() && acc() && acc().brand === "custom" && !acc().url){
+        showBanner("err", "<b>自定义接口未填地址</b><br>请在设置里填写余额接口地址和字段路径。");
+      }
+      armTimer();
+      sync();
+    });
+
+    $("btnClear").addEventListener("click", function(){
+      try{ localStorage.removeItem(LS); }catch(e){}
+      state.key = ""; state.accounts = []; state.accIdx = 0; state.proxy = ""; state.alert = 0; state.autoSec = 0; state.demo = false;
+      $("inKey").value = ""; if($("inProxy")) $("inProxy").value = ""; $("inAlert").value = ""; $("inAuto").value = "0";
+      setTg("tgDemo", false); setTg("tgSave", true);
+      if(state.timer){ clearInterval(state.timer); state.timer = null; }
+      clearData();
+      hideBanner();
+      closeDrawer();
+    });
+
+    if($("btnPin")){
+      $("btnPin").addEventListener("click", function(){
+        if(NATIVE && window.MimoNative && typeof window.MimoNative.pinWidget === "function"){
+          var ok = window.MimoNative.pinWidget();
+          $("pinLine").textContent = ok
+            ? "已发送添加请求，请在系统弹窗里点「添加」。"
+            : "当前桌面不支持一键添加，请在桌面小组件列表里手动选择。";
+        }else{
+          $("pinLine").textContent = "网页模式不支持，需在 App 内使用。";
+        }
+      });
+    }
+
+    Array.prototype.forEach.call($("segMetric").children, function(b){
+      b.addEventListener("click", function(){
+        Array.prototype.forEach.call($("segMetric").children, function(x){ x.classList.remove("on"); });
+        b.classList.add("on");
+        state.metric = b.getAttribute("data-m") || "amt";
+        renderModelCompare();
+      });
+    });
+
+    $("multiLegend").addEventListener("click", function(ev){
+      var t = ev.target;
+      while(t && t !== this && !t.getAttribute("data-name")) t = t.parentNode;
+      if(!t || t === this) return;
+      var nm = t.getAttribute("data-name");
+      if(!nm) return;
+      state.multiHidden[nm] = !state.multiHidden[nm];
+      renderModelCompare();
+    });
+
+    $("accBar").addEventListener("click", function(ev){
+      var t = ev.target;
+      while(t && t !== this && !t.getAttribute("data-i") && t.id !== "accAdd") t = t.parentNode;
+      if(!t || t === this) return;
+      if(t.id === "accAdd" || (t.getAttribute && t.getAttribute("data-i") === null && t.className.indexOf("add") >= 0)){
+        openDrawer();
+        return;
+      }
+      var i = parseInt(t.getAttribute("data-i"), 10);
+      if(!isNaN(i)) switchAcc(i);
+    });
+
+    $("bannerX").addEventListener("click", hideBanner);
+
+    Array.prototype.forEach.call($("segRange").children, function(b){
+      b.addEventListener("click", function(){
+        Array.prototype.forEach.call($("segRange").children, function(x){ x.classList.remove("on"); });
+        b.classList.add("on");
+        state.days = Number(b.getAttribute("data-d")) || 7;
+        saveCfg();
+        sync();
+      });
+    });
+
+    Array.prototype.forEach.call($("tabs").children, function(b){
+      b.addEventListener("click", function(){ setTab(b.getAttribute("data-tab")); });
+    });
+
+    // 图表悬浮提示（只绑定一次，meta 与数据在回调里实时读取）
+    bindTip($("chSpend"), $("tipSpend"), "spend");
+    bindTip($("chTok"), $("tipTok"), "tok");
+    window.addEventListener("resize", debounce(function(){
+      if(aggCurrent) renderTrend(aggCurrent);
+    }, 180));
+  }
+
+  function debounce(fn, ms){
+    var t = null;
+    return function(){
+      var a = arguments, self = this;
+      if(t) clearTimeout(t);
+      t = setTimeout(function(){ fn.apply(self, a); }, ms);
+    };
+  }
+
+  /* ---------- 启动 ---------- */
+  loadCfg();
+  bind();
+  // 区间按钮初始化
+  Array.prototype.forEach.call($("segRange").children, function(b){
+    b.classList.toggle("on", Number(b.getAttribute("data-d")) === state.days);
+  });
+
+  function applyInsets(){
+    if(!(NATIVE && window.MimoNative && typeof window.MimoNative.insets === "function")) return;
+    try{
+      var p = String(window.MimoNative.insets() || "0,0,0,0").split(",");
+      var dpr = window.devicePixelRatio || 1;
+      // 原生返回的是物理像素，CSS 用逻辑像素
+      var top = (Number(p[0]) || 0) / dpr;
+      var r = document.documentElement.style;
+      // 底部不要再加：原生已把 WebView 垫高了一个导航条的高度，
+      // 两边都加会变成双倍黑边。
+      if(top > 0) r.setProperty("--sat", Math.round(top) + "px");
+    }catch(e){}
+  }
+
+  function applyPad(){
+    if(NATIVE && window.MimoNative && typeof window.MimoNative.setBottomPad === "function"){
+      try{ window.MimoNative.setBottomPad(state.pad === undefined ? -1 : state.pad); }catch(e){}
+    }
+  }
+
+  function showDiag(){
+    var el = $("diagLine");
+    if(!el) return;
+    if(NATIVE && window.MimoNative && typeof window.MimoNative.metrics === "function"){
+      try{
+        var w = (typeof window.MimoNative.widgetStatus === "function") ? window.MimoNative.widgetStatus() : "";
+        el.textContent = "布局诊断：" + window.MimoNative.metrics() + "\n小组件：" + w;
+        return;
+      }catch(e){}
+    }
+    el.textContent = "布局诊断：网页模式不适用";
+  }
+
+  function boot(){
+    applyPad();
+    applyInsets();
+    setTimeout(applyInsets, 200);
+    setTimeout(applyInsets, 700);
+    setTab("trend");
+    renderAll();
+    // 布局稳定后再补画一次，避免冷启动时画布宽度为 0
+    setTimeout(function(){ if(aggCurrent) renderTrend(aggCurrent); }, 320);
+  }
+
+  if(!state.key){
+    boot();
+    showBanner("info", "还没有连接账号。点右上角设置填入 API Key，或先打开<b>演示数据</b>看看界面。");
+  }else{
+    boot();
+    armTimer();
+    sync();
+  }
+
+  window.addEventListener("load", function(){
+    setTimeout(function(){ if(aggCurrent) renderTrend(aggCurrent); }, 80);
+  });
+
+})();
+</script>
+</body>
+</html>

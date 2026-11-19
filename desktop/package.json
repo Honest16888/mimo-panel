@@ -1,0 +1,11 @@
+{
+  "name": "mimo-panel-desktop",
+  "version": "3.0.0",
+  "description": "MiMo / DeepSeek / Kimi 等大模型平台余额与用量面板（桌面版）",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": { "node": ">=16" },
+  "license": "MIT"
+}
