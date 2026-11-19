@@ -999,6 +999,7 @@
       state.bills = d.bills;
       state.lastSync = new Date();
       renderAll();
+      pushWidgetFromPage();
       showBanner("info", DEMO_NOTE);
       return;
     }
@@ -1755,6 +1756,26 @@
   function historySave(h){
     try{ localStorage.setItem(LS_H, JSON.stringify(h)); }catch(e){}
   }
+  // 页面刷新后把最新余额 / 近 14 天消费直接推给桌面小组件
+  function pushWidgetFromPage(){
+    if(!NATIVE || !window.MimoNative || typeof window.MimoNative.pushWidget !== "function") return;
+    if(state.demo) return;    // 演示数据不能污染真实小组件
+    if(!hasUsage()) return;   // 多供应商下小组件只认 MiMo 口径
+    var b = state.balance;
+    if(!b || !b.balance_infos || !b.balance_infos.length) return;
+    var bal = num(b.balance_infos[0].total_available);
+    var h = historyLoad();
+    var arr = [];
+    for(var i = 13; i >= 0; i--){
+      var d = new Date();
+      d.setDate(d.getDate() - i);
+      var ds = d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2);
+      var day = h[ds];
+      arr.push(day && day.amt ? Math.round(day.amt * 100) / 100 : 0);
+    }
+    try{ window.MimoNative.pushWidget(bal.toFixed(2), "[" + arr.join(",") + "]"); }catch(e){}
+  }
+
   function historyRecord(agg){
     if(state.demo) return;
     var h = historyLoad();

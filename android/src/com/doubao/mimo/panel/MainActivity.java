@@ -197,6 +197,20 @@ public class MainActivity extends Activity {
         }
 
         /** 申请通知权限（Android 13+） */
+        /** 页面把当前余额与近 14 天消费直接写进小组件缓存，立即重绘 */
+        @JavascriptInterface
+        public void pushWidget(String balance, String dailyCsv) {
+            try {
+                double b = Double.parseDouble(balance);
+                runOnUiThread(new Runnable() {
+                    @Override public void run() {
+                        try { WidgetProvider.pushBalance(getApplicationContext(), b, dailyCsv); }
+                        catch (Throwable ignored) {}
+                    }
+                });
+            } catch (Throwable ignored) {}
+        }
+
         @JavascriptInterface
         public void requestNotifyPermission() {
             runOnUiThread(new Runnable() {

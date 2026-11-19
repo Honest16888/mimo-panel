@@ -68,6 +68,21 @@ public class WidgetProvider extends AppWidgetProvider {
         }, "mimo-widget").start();
     }
 
+    /**
+     * 页面刷新成功后主动推送最新余额与近 14 天消费，
+     * 避免小组件只能等 30 分钟一次的 refresh() 才更新。
+     */
+    public static void pushBalance(Context c, double bal, String dailyCsv) {
+        SharedPreferences sp = Net.prefs(c);
+        SharedPreferences.Editor e = sp.edit()
+                .putFloat(K_BAL, (float) bal)
+                .putBoolean(K_ERR, false);
+        if (dailyCsv != null && dailyCsv.length() > 3) e.putString(K_DAILY, dailyCsv);
+        e.putLong("wTime", System.currentTimeMillis());
+        e.apply();
+        renderAll(c.getApplicationContext());
+    }
+
     public static void renderAll(Context c) {
         AppWidgetManager mgr = AppWidgetManager.getInstance(c);
         ComponentName cn = new ComponentName(c, WidgetProvider.class);
