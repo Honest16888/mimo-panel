@@ -40,6 +40,19 @@ public class MainActivity extends Activity {
     private static final String PREF = "mimo_panel";
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        // 只要 App 回到前台就刷新一次小组件：不依赖页面脚本，
+        // 避免页面版本与原生版本不同步时小组件长期停在旧值
+        try {
+            if (Net.prefs(this).getString("apiKey", "").length() > 0) {
+                WidgetProvider.refresh(this);
+            }
+        } catch (Throwable ignored) {
+        }
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
@@ -235,7 +248,19 @@ public class MainActivity extends Activity {
                     if (info.provider != null && me.equals(info.provider)) { found = true; break; }
                 }
                 int n = m.getAppWidgetIds(me).length;
-                return (found ? "已注册" : "系统未识别") + " · 桌面实例 " + n;
+                android.content.SharedPreferences sp = Net.prefs(MainActivity.this);
+                String cache;
+                if (sp.contains("wBalance")) {
+                    long t = sp.getLong("wTime", 0);
+                    String clk = t > 0
+                            ? new java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.getDefault())
+                                .format(new java.util.Date(t))
+                            : "—";
+                    cache = "缓存 \u00a5" + Net.money(sp.getFloat("wBalance", 0f)) + " @" + clk;
+                } else {
+                    cache = "缓存为空";
+                }
+                return (found ? "已注册" : "系统未识别") + " · 桌面实例 " + n + " · " + cache;
             } catch (Throwable t) {
                 return "检测失败 " + t.getClass().getSimpleName();
             }

@@ -141,6 +141,13 @@ public class WidgetProvider extends AppWidgetProvider {
             int left = (int) Math.floor(bal / avg);
             sub2 = left <= 0 ? "不足 1 天用量" : "可用约 " + left + " 天";
         }
+        long tUpd = sp.getLong("wTime", 0);
+        String clock = tUpd > 0
+                ? new java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault())
+                    .format(new java.util.Date(tUpd))
+                : "";
+        if (sub2.length() > 0) sub2 = sub2 + (clock.length() > 0 ? " · " + clock : "");
+        else if (hasBal && clock.length() > 0) sub2 = clock + " 更新";
 
         rv.setTextViewText(R.id.wide_bal, money);
         rv.setTextViewText(R.id.wide_sub, sub);

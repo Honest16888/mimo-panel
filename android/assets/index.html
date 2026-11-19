@@ -1921,13 +1921,20 @@
     renderAccBar();
     applyBrandUI();
     saveCfg();
+    applyConfig();
     sync(true);
   }
 
   function applyConfig(){
     if(NATIVE && window.MimoNative && typeof window.MimoNative.setConfig === "function"){
-      // 后台预警/桌面小组件只支持 MiMo 用量口径，切到其他厂商时不写入 Key，避免展示错号数据
-      var nativeKey = hasUsage() ? (state.key || "") : "";
+      // 后台预警/桌面小组件只认 MiMo：始终传「MiMo 账号」的 Key，
+      // 而不是当前账号的 Key——否则切到 DeepSeek 等账号后会写入空 Key，
+      // 小组件的定时刷新全部失败，界面里余额已变、桌面却一直停在旧值。
+      var mm = null;
+      (state.accounts || []).forEach(function(a){
+        if(!mm && a && a.brand === "mimo" && a.key) mm = a;
+      });
+      var nativeKey = mm ? mm.key : ((hasUsage() && state.key) || "");
       try{ window.MimoNative.setConfig(nativeKey, state.alert || 0, !!state.push, state.pushEvery || 6); }catch(e){}
     }
   }
@@ -2205,6 +2212,7 @@
       $("inKey").value = state.key;
       renderAccBar();
       saveCfg();
+      applyConfig();
       sync(true);
     });
 
